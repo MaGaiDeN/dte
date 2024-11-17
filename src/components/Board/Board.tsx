@@ -36,44 +36,19 @@ const Board: React.FC<BoardProps> = ({ isPuzzle = false }) => {
           const newGame = new Chess();
           
           try {
-            if (process.env.NODE_ENV === 'development') {
-              console.log('Datos del puzzle recibidos:', {
-                pgn: puzzleData.game.pgn,
-                initialPly: puzzleData.puzzle.initialPly,
-                solution: puzzleData.puzzle.solution,
-                color: puzzleData.puzzle.initialPly % 2 === 0 ? 'blancas' : 'negras'
-              });
-            }
-
-            // Cargar el PGN completo
+            // Cargar el PGN y llegar a la posición inicial del puzzle
             newGame.loadPgn(puzzleData.game.pgn);
             const moves = newGame.history();
-            const lastMove = moves[puzzleData.puzzle.initialPly - 1];
-
-            if (process.env.NODE_ENV === 'development') {
-              console.log('Último movimiento antes del puzzle:', lastMove);
-              console.log('Le toca mover a:', puzzleData.puzzle.initialPly % 2 === 0 ? 'blancas' : 'negras');
-            }
-
+            
             // Reiniciar y aplicar movimientos hasta la posición inicial del puzzle
             newGame.reset();
             for (let i = 0; i < puzzleData.puzzle.initialPly; i++) {
-              const result = newGame.move(moves[i]);
-              if (!result) {
-                throw new Error(`Error al aplicar movimiento ${i}: ${moves[i]}`);
-              }
+              newGame.move(moves[i]);
             }
-
-            const puzzleFen = newGame.fen();
             
-            if (process.env.NODE_ENV === 'development') {
-              console.log('Posición inicial del puzzle:', {
-                ply: puzzleData.puzzle.initialPly,
-                fen: puzzleFen,
-                turno: newGame.turn(),
-                movimientosPosibles: newGame.moves()
-              });
-            }
+            // Realizar el movimiento Qe6 automáticamente
+            newGame.move('Qe6');
+            const puzzleFen = newGame.fen();
             
             if (isSubscribed) {
               setPuzzle({
@@ -83,31 +58,18 @@ const Board: React.FC<BoardProps> = ({ isPuzzle = false }) => {
                 themes: puzzleData.puzzle.themes
               });
               
-              // Primero establecemos el juego en la posición inicial
-              const initialGame = new Chess(puzzleFen);
-              setGame(initialGame);
-              
-              // Automatizamos el movimiento Nxd3
-              setTimeout(() => {
-                const moveResult = initialGame.move({
-                  from: 'b4',
-                  to: 'd3'
-                });
-                
-                if (moveResult) {
-                  setGame(initialGame);
-                  setMessage('Tu turno');
-                }
-              }, 1000);
+              setGame(new Chess(puzzleFen));
+              setMessage('Tu turno - Mueve las blancas');
+              setCurrentMoveIndex(0); // Reseteamos el índice de movimientos
             }
           } catch (error) {
-            console.error('Error:', error);
+            console.error('Error al procesar el puzzle:', error);
             if (isSubscribed) {
               setMessage('Error al cargar el puzzle. Intenta recargar la página.');
             }
           }
         } catch (error) {
-          console.error('Error:', error);
+          console.error('Error al obtener el puzzle:', error);
           if (isSubscribed) {
             setMessage('Error al cargar el puzzle. Intenta recargar la página.');
           }
