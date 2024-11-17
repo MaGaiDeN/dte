@@ -1,0 +1,247 @@
+/* Variables específicas para Home si las necesitas */
+:root {
+  --header-height: 100px;
+  --container-bg: #2f2f2f;
+}
+
+/* Layout principal */
+.home-container {
+  padding-top: calc(var(--header-height) + 20px);
+  padding-inline: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+  color: var(--color-white);
+  background-color: var(--container-bg);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Header */
+.main-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--header-height);
+  background: #262522;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 2rem;
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Sección de juego */
+.game-options {
+  text-align: center;
+  width: 100%;
+  max-width: 600px;
+}
+
+.game-options h1 {
+  font-family: var(--font-primary);
+  font-size: 2.5rem;
+  margin-bottom: 2rem;
+  color: var(--color-white);
+}
+
+/* Estadísticas */
+.stats {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin: 1rem 0 2rem;
+  font-family: var(--font-secondary);
+}
+
+.games-today, .playing-now {
+  color: var(--color-accent);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+/* Contenedor de botones */
+.game-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 2rem;
+  width: 100%;
+  max-width: 600px;
+  margin-inline: auto;
+  align-items: center;
+}
+
+/* Estilos base para botones de juego */
+.game-button,
+button.game-button {
+  background: #404040;
+  padding: 1.5rem;
+  border-radius: 12px;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all var(--transition-smooth);
+  border: 2px solid transparent;
+  width: 100%;
+  max-width: 500px;
+  text-align: left;
+  font-family: var(--font-secondary);
+  font-weight: normal;
+}
+
+/* Variantes de botones */
+.game-button.primary,
+.game-button.chess-today,
+.game-button.solve-puzzles,
+button.game-button {
+  background-color: var(--color-accent);
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  align-items: center;
+  color: var(--color-white);
+  padding: 1.5rem;
+}
+
+.game-button:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+  border-color: var(--color-accent);
+}
+
+/* Contenido de los botones */
+.button-content,
+.game-button button {
+  font-family: var(--font-secondary);
+  text-align: left;
+  width: 100%;
+}
+
+.button-content h3,
+.game-button button h3 {
+  font-family: var(--font-primary);
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--color-white);
+}
+
+.button-content p,
+.game-button button p {
+  font-size: 0.9rem;
+  margin: 0.3em 0 0;
+  opacity: 0.8;
+  color: var(--color-white);
+  font-weight: 400;
+}
+
+/* Iconos */
+.game-button .icon {
+  font-size: 2em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5em;
+  color: var(--color-white);
+}
+
+/* Sección de puzzles */
+.puzzle-section {
+  margin-top: 3rem;
+  margin-bottom: 3rem;
+  padding: 2rem;
+  background: #363636;
+  border-radius: 12px;
+  text-align: center;
+  max-width: 400px;
+  margin-inline: auto;
+}
+
+.puzzle-section h2 {
+  font-family: var(--font-primary);
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  color: var(--color-white);
+}
+
+/* Botones de autenticación */
+.auth-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.btn-signup, .btn-login {
+  font-family: var(--font-primary);
+  padding: 0.7rem 1.4rem;
+  font-weight: 600;
+  transition: all var(--transition-smooth);
+}
+
+.btn-signup {
+  background-color: var(--color-accent);
+  color: var(--color-white);
+}
+
+.btn-login {
+  background-color: transparent;
+  color: var(--color-white);
+  border: 2px solid var(--color-accent);
+}
+
+.btn-signup:hover, .btn-login:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 140, 66, 0.2);
+}
+
+/* Media Queries */
+@media (min-width: 768px) {
+  :root {
+    --header-height: 120px;
+  }
+
+  .btn-signup, .btn-login {
+    font-size: 1.1rem;
+  }
+  
+  .game-buttons {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .game-button,
+  button.game-button,
+  .game-button.chess-today {
+    width: calc(50% - 0.5rem);
+  }
+} 
+
+/* Estilo para botones sin contenido interno (solo texto) */
+button.game-button,
+.game-button.chess-today {
+  justify-content: center;
+  font-family: var(--font-primary);
+  font-weight: 600;
+  font-size: 1.3rem;
+  text-align: center;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Estilo para botones con contenido interno (icono + texto) */
+.game-button.primary,
+.game-button.solve-puzzles {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+/* Ajuste para el contenido interno de los botones con icono */
+.game-button.primary .button-content,
+.game-button.solve-puzzles .button-content {
+  text-align: left;
+} 
