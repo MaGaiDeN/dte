@@ -212,12 +212,16 @@ button.game-button {
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: center;
+    gap: 1rem;
+    max-width: 800px;
   }
 
   .game-button,
   button.game-button,
-  .game-button.chess-today {
-    width: calc(50% - 0.5rem);
+  .game-button.primary {
+    flex: 1;
+    width: calc(50% - 1rem);
+    max-width: calc(50% - 1rem);
   }
 } 
 
@@ -244,4 +248,21 @@ button.game-button,
 .game-button.primary .button-content,
 .game-button.solve-puzzles .button-content {
   text-align: left;
+}
+
+/* Estilo base para el botón */
+button.game-button {
+  width: 100%;
+  max-width: 500px;
+  margin: 1.5rem auto 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@media (min-width: 768px) {
+  button.game-button {
+    width: 100%;
+    max-width: 800px; /* Mismo ancho que game-buttons en desktop */
+  }
 } 
