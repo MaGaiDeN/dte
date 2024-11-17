@@ -17,6 +17,7 @@ function App() {
             <Route path="computer" element={<Board />} />
             <Route path="online" element={<Board />} />
             <Route path="friend" element={<Board />} />
+            <Route path="puzzle" element={<Board isPuzzle={true} />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

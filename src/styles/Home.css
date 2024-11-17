@@ -34,6 +34,7 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+
 /* Sección de juego */
 .game-options {
   text-align: center;
@@ -172,13 +173,14 @@ button.game-button {
 /* Botones de autenticación */
 .auth-buttons {
   display: flex;
-  gap: 1rem;
+  gap: 0.5rem;
 }
 
 .btn-signup, .btn-login {
   font-family: var(--font-primary);
-  padding: 0.7rem 1.4rem;
+  padding: 0.5rem 1rem;
   font-weight: 600;
+  font-size: 0.9rem;
   transition: all var(--transition-smooth);
 }
 
@@ -190,7 +192,7 @@ button.game-button {
 .btn-login {
   background-color: transparent;
   color: var(--color-white);
-  border: 2px solid var(--color-accent);
+  border: 1px solid var(--color-accent);
 }
 
 .btn-signup:hover, .btn-login:hover {
@@ -265,4 +267,8 @@ button.game-button {
     width: 100%;
     max-width: 800px; /* Mismo ancho que game-buttons en desktop */
   }
+} 
+
+.logo-icon {
+  font-size: 1.5em; /* 50% más grande que el texto */
 } 
