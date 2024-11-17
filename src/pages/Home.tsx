@@ -61,10 +61,9 @@ const Home = () => {
               <Board isPuzzle={true} />
             </div>
             <div className="quote">
-              <div className="quote-content">
-                <p>"Puzzles are the best way to improve pattern recognition, and no site does it better."</p>
-                <cite>GM Hikaru Nakamura</cite>
-              </div>
+              <p>
+                "En Ajedrez, el vencedor es quien hace la siguiente jugada al último error." <br/> GM S. Tartakower
+              </p>
             </div>
             <button className="game-button">Solve Puzzles</button>
           </div>

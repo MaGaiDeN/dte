@@ -96,10 +96,7 @@ const Board: React.FC<BoardProps> = ({ isPuzzle = false }) => {
                 
                 if (moveResult) {
                   setGame(initialGame);
-                  setMessage(`Puzzle diario (Rating: ${puzzleData.puzzle.rating}). 
-                    Movimiento anterior: Nxd3. 
-                    Tu turno: mueve el peón de c2 a d3.
-                    Temas: ${puzzleData.puzzle.themes.join(', ')}`);
+                  setMessage('Tu turno');
                 }
               }, 1000);
             }
@@ -128,37 +125,26 @@ const Board: React.FC<BoardProps> = ({ isPuzzle = false }) => {
   function makeAMove(move: any) {
     if (!game || !puzzle) return false;
     
-    // Verificar que es el turno correcto
-    if (game.turn() !== 'w') {
-      console.log('Turno actual:', game.turn());
-      console.log('No es el turno de las blancas');
-      return false;
-    }
-
-    const gameCopy = new Chess(game.fen());
-    
     try {
       const moveString = move.from + move.to + (move.promotion || '');
       const expectedMove = puzzle.moves[currentMoveIndex];
       
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Análisis del movimiento:', {
-          movimientoUsuario: moveString,
-          movimientoEsperado: expectedMove,
-          desde: move.from,
-          hasta: move.to,
-          promocion: move.promotion,
-          turno: game.turn(),
-          fen: game.fen()
-        });
-      }
-      
       if (moveString === expectedMove) {
+        const gameCopy = new Chess(game.fen());
         const result = gameCopy.move(move);
+        
         if (result) {
           setGame(gameCopy);
           
-          // Realizar el movimiento automático después de 500ms
+          // Verificar si es el último movimiento del puzzle
+          if (currentMoveIndex === puzzle.moves.length - 1) {
+            setMessage(`¡Felicidades! 🎉 Has resuelto el puzzle correctamente.`);
+            return true;
+          }
+          
+          setCurrentMoveIndex(currentMoveIndex + 1);
+          
+          // Si no es el último movimiento, continuar con la secuencia normal
           setTimeout(() => {
             if (currentMoveIndex + 1 < puzzle.moves.length) {
               const nextMove = puzzle.moves[currentMoveIndex + 1];
@@ -174,19 +160,14 @@ const Board: React.FC<BoardProps> = ({ isPuzzle = false }) => {
               if (nextResult) {
                 setGame(new Chess(gameCopy.fen()));
                 setCurrentMoveIndex(currentMoveIndex + 2);
-                setMessage(`Tu turno. Siguiente movimiento: ${
-                  currentMoveIndex + 2 >= puzzle.moves.length 
-                    ? 'último movimiento' 
-                    : 'encuentra la mejor jugada'
-                }`);
+                setMessage('Tu turno');
               }
             }
           }, 500);
           return true;
         }
       } else {
-        setMessage(`Movimiento incorrecto. Intenta de nuevo. 
-          Pista: busca un movimiento forzado.`);
+        setMessage('Movimiento incorrecto. Intenta de nuevo.');
       }
       return false;
     } catch (error) {
@@ -196,29 +177,33 @@ const Board: React.FC<BoardProps> = ({ isPuzzle = false }) => {
   }
 
   return (
-    <div className="board-container">
-      <div className="puzzle-message">{message}</div>
-      {game && puzzle && (
-        <div>
-          <Chessboard 
-            position={game.fen()} 
-            boardOrientation="white"
-            onPieceDrop={(from, to) => {
-              // Solo incluir promoción si es un movimiento de peón a última fila
-              const piece = game.get(from);
-              const isPromotion = piece?.type === 'p' && (to[1] === '8' || to[1] === '1');
-              
-              return makeAMove({
-                from,
-                to,
-                promotion: isPromotion ? 'q' : undefined // Solo añadir promoción si es necesario
-              });
-            }}
-          />
-          <div className="puzzle-info" style={{ color: 'white', marginTop: '10px' }}>
-            <p>Turno: {game.turn() === 'w' ? 'Blancas' : 'Negras'}</p>
-            <p>Movimientos restantes: {Math.ceil((puzzle.moves.length - currentMoveIndex) / 2)}</p>
-          </div>
+    <div className="puzzle-container">
+      {game && (
+        <Chessboard 
+          position={game.fen()} 
+          boardOrientation="white"
+          onPieceDrop={(from, to) => {
+            // Solo incluir promoción si es un movimiento de peón a última fila
+            const piece = game.get(from);
+            const isPromotion = piece?.type === 'p' && (to[1] === '8' || to[1] === '1');
+            
+            return makeAMove({
+              from,
+              to,
+              promotion: isPromotion ? 'q' : undefined
+            });
+          }}
+        />
+      )}
+      {message && (
+        <div className="puzzle-message" style={{ 
+          marginTop: '1rem',
+          padding: '1rem',
+          backgroundColor: puzzle && currentMoveIndex === puzzle.moves.length - 1 ? '#e6ffe6' : '#fff',
+          border: '1px solid #ccc',
+          borderRadius: '4px'
+        }}>
+          {message}
         </div>
       )}
     </div>
