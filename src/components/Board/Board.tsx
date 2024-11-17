@@ -1,52 +1,101 @@
 import { Chessboard } from 'react-chessboard';
 import { Chess } from 'chess.js';
 import { useState, useEffect } from 'react';
+import { puzzles } from '../../data/puzzles';
+
+console.log('Puzzles cargados:', puzzles);
+
+interface Puzzle {
+  fen: string;
+  moves: string[];
+  rating: number;
+  themes: string[];
+}
 
 interface BoardProps {
   isPuzzle?: boolean;
 }
 
-const MATE_IN_TWO_PUZZLES = [
-  {
-    fen: "r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 0 1",
-    solution: ["h5f7"],
-    name: "Opera Game Mate"
-  },
-  {
-    fen: "r1b1k1nr/pppp1ppp/2n5/2b1P3/4P3/2Q5/PPP2PPP/RNB1KB1R w KQkq - 0 1",
-    solution: ["c3g7"],
-    name: "Classic Bishop Sacrifice"
-  },
-  {
-    fen: "r1b2rk1/ppp2ppp/2n5/3q4/8/8/PPPP1PPP/RNBQKB1R w KQ - 0 1",
-    solution: ["d1d5"],
-    name: "Queen Trap Mate"
-  }
-];
-
-const Board = ({ isPuzzle = false }: BoardProps) => {
+const Board: React.FC<BoardProps> = ({ isPuzzle = false }) => {
   const [game, setGame] = useState(new Chess());
-  const [currentPuzzle, setCurrentPuzzle] = useState(0);
+  const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
   const [message, setMessage] = useState('');
   const [moveCount, setMoveCount] = useState(0);
 
   useEffect(() => {
     if (isPuzzle) {
-      loadPuzzle(currentPuzzle);
+      // Si estamos en modo puzzle, intentar cargar el puzzle guardado primero
+      const savedPuzzle = localStorage.getItem('currentPuzzle');
+      if (savedPuzzle) {
+        const parsedPuzzle = JSON.parse(savedPuzzle);
+        setPuzzle(parsedPuzzle);
+        const newGame = new Chess();
+        newGame.load(parsedPuzzle.fen);
+        setGame(newGame);
+      } else {
+        // Si no hay puzzle guardado, cargar uno nuevo
+        fetchRandomPuzzle();
+      }
     }
-  }, [isPuzzle, currentPuzzle]);
+  }, [isPuzzle]);
 
-  const loadPuzzle = (index: number) => {
-    const puzzle = MATE_IN_TWO_PUZZLES[index];
-    const newGame = new Chess(puzzle.fen);
-    setGame(newGame);
-    setMessage('Encuentra el mate en 2');
-    setMoveCount(0);
-  };
+  // Guardar el puzzle cuando cambie
+  useEffect(() => {
+    if (puzzle) {
+      localStorage.setItem('currentPuzzle', JSON.stringify(puzzle));
+    }
+  }, [puzzle]);
 
-  const nextPuzzle = () => {
-    const nextIndex = (currentPuzzle + 1) % MATE_IN_TWO_PUZZLES.length;
-    setCurrentPuzzle(nextIndex);
+  const fetchRandomPuzzle = async () => {
+    try {
+      const response = await fetch('https://lichess.org/api/puzzle/daily', {
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Error al cargar el puzzle');
+      }
+
+      const puzzleData = await response.json();
+      
+      // Validar que tenemos los datos necesarios
+      if (!puzzleData?.game?.pgn || !puzzleData?.puzzle?.solution) {
+        throw new Error('Datos del puzzle incompletos');
+      }
+
+      const newGame = new Chess();
+      
+      try {
+        // Cargar el PGN y avanzar hasta la posición inicial del puzzle
+        newGame.loadPgn(puzzleData.game.pgn);
+        const moves = newGame.history();
+        const initialPly = puzzleData.puzzle.initialPly;
+        
+        // Reiniciar el juego y aplicar los movimientos hasta la posición del puzzle
+        newGame.reset();
+        for (let i = 0; i < initialPly; i++) {
+          if (moves[i]) newGame.move(moves[i]);
+        }
+        
+        setPuzzle({
+          fen: newGame.fen(),
+          moves: puzzleData.puzzle.solution,
+          rating: puzzleData.puzzle.rating,
+          themes: puzzleData.puzzle.themes
+        });
+        
+        setGame(newGame);
+        setMessage(`¡Puzzle diario! (Rating: ${puzzleData.puzzle.rating})`);
+        setMoveCount(0);
+      } catch (error) {
+        throw new Error('Error al procesar el PGN del puzzle');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      setMessage('Error al cargar el puzzle. Intenta recargar la página.');
+    }
   };
 
   function makeAMove(move: any) {
@@ -56,20 +105,33 @@ const Board = ({ isPuzzle = false }: BoardProps) => {
       const result = gameCopy.move(move);
       setGame(gameCopy);
       
-      if (isPuzzle) {
-        const puzzle = MATE_IN_TWO_PUZZLES[currentPuzzle];
-        setMoveCount(prev => prev + 1);
-        
-        if (moveCount === 0 && puzzle.solution.includes(result.from + result.to)) {
-          setMessage('¡Correcto! Ahora encuentra el mate');
-        } else if (moveCount >= 2) {
-          if (gameCopy.isCheckmate()) {
-            setMessage('¡Excelente!');
-            setTimeout(nextPuzzle, 2000);
-          } else {
-            setMessage('Inténtalo de nuevo');
-            setTimeout(() => loadPuzzle(currentPuzzle), 1500);
-          }
+      if (!puzzle) return false;
+      
+      setMoveCount(prev => prev + 1);
+      const moveString = result.from + result.to;
+      
+      // Comprobar si el movimiento coincide con la solución
+      if (moveCount === 0 && moveString === puzzle.moves[0]) {
+        setMessage('¡Correcto! Ahora encuentra el mate');
+      } else if (moveCount === 0) {
+        setMessage('Movimiento incorrecto. Inténtalo de nuevo');
+        setTimeout(() => {
+          const newGame = new Chess(puzzle.fen);
+          setGame(newGame);
+          setMoveCount(0);
+        }, 1500);
+        return true;
+      } else if (moveCount >= 2) {
+        if (gameCopy.isCheckmate()) {
+          setMessage('¡Excelente! Has encontrado el mate en 2');
+          setTimeout(fetchRandomPuzzle, 2000);
+        } else {
+          setMessage('Inténtalo de nuevo');
+          setTimeout(() => {
+            const newGame = new Chess(puzzle.fen);
+            setGame(newGame);
+            setMoveCount(0);
+          }, 1500);
         }
       }
       
@@ -79,13 +141,23 @@ const Board = ({ isPuzzle = false }: BoardProps) => {
     }
   }
 
+  // Agregar una función auxiliar para obtener el turno
+  const getTurn = (fen: string) => {
+    const turnField = fen.split(' ')[1]; // El turno es el segundo campo en el FEN
+    return turnField === 'w' ? 'Blancas' : 'Negras';
+  };
+
   return (
     <div className="board-container">
-      {isPuzzle && (
-        <div className="puzzle-message">{message}</div>
+      <div className="puzzle-message">{message}</div>
+      {puzzle && (
+        <div className="puzzle-info" style={{ color: 'white' }}>
+          <p><strong>Turno:</strong> {getTurn(puzzle.fen)}</p>
+        </div>
       )}
       <Chessboard 
         position={game.fen()} 
+        boardOrientation={puzzle?.fen.split(' ')[1] === 'b' ? 'black' : 'white'}
         onPieceDrop={(from, to) => {
           return makeAMove({
             from,
