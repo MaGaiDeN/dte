@@ -17,17 +17,19 @@
 
 .time-options {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: center;
   gap: 0.5rem;
-  justify-content: center;
   width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 .time-option {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 1rem;
+  padding: 0.8rem;
   background: #3a3734;
   border: 1px solid #4a4745;
   border-radius: 6px;
@@ -58,4 +60,25 @@
 
 .time-option.selected .name {
   color: white;
+}
+
+/* Agrupación visual por categorías */
+.time-category {
+  width: 100%;
+  text-align: center;
+  color: var(--color-white);
+  margin-top: 1rem;
+  font-weight: 500;
+}
+
+.time-category-options {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.time-category:first-child {
+  margin-top: 0;
 } 

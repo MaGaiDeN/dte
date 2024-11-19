@@ -7,7 +7,7 @@ import { auth } from '../../config/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useNavigate, Link } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
-import { TIME_CONTROL_OPTIONS } from '../../components/TimeControl/constants.ts';
+import { TIME_CONTROL_OPTIONS } from '../../components/TimeControl/constants';
 
 
 const Lobby = () => {
@@ -24,7 +24,12 @@ const Lobby = () => {
     return () => unsubscribe();
   }, [navigate]);
 
-  const [matchConfig, setMatchConfig] = useState<MatchConfig>(DEFAULT_MATCH_CONFIG);
+  const [matchConfig, setMatchConfig] = useState<MatchConfig>({
+    timeControl: TIME_CONTROL_OPTIONS.find(opt => opt.time === 3 && opt.increment === 2) || TIME_CONTROL_OPTIONS[0],
+    numberOfGames: 3,
+    rated: true,
+    color: 'random'
+  });
 
   const handleCreateChallenge = () => {
     console.log('Creando reto:', matchConfig);

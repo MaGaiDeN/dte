@@ -24,7 +24,7 @@ export const TIME_CONTROL_OPTIONS: TimeControlOption[] = [
 
 // Configuración inicial por defecto
 export const DEFAULT_MATCH_CONFIG: MatchConfig = {
-  timeControl: TIME_CONTROL_OPTIONS[3], // 5+0 por defecto
+  timeControl: TIME_CONTROL_OPTIONS.find(opt => opt.time === 3 && opt.increment === 2) || TIME_CONTROL_OPTIONS[0],
   numberOfGames: 1,
   rated: true,
   color: 'random'
