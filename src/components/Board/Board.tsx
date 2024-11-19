@@ -40,15 +40,28 @@ const Board: React.FC<BoardProps> = ({ isPuzzle = false }) => {
             newGame.loadPgn(puzzleData.game.pgn);
             const moves = newGame.history();
             
+            console.log('Movimientos totales:', moves.length);
+            console.log('Initial Ply:', puzzleData.puzzle.initialPly);
+            console.log('Moves:', moves);
+
             // Reiniciar y aplicar movimientos hasta la posición inicial del puzzle
             newGame.reset();
             for (let i = 0; i < puzzleData.puzzle.initialPly; i++) {
               newGame.move(moves[i]);
             }
             
-            // Realizar el movimiento Qe6 automáticamente
-            newGame.move('Qe6');
             const puzzleFen = newGame.fen();
+            const nextMove = moves[puzzleData.puzzle.initialPly];
+
+            console.log('Siguiente movimiento:', nextMove);
+            
+            if (!nextMove) {
+              console.error('No se encontró el siguiente movimiento');
+              if (isSubscribed) {
+                setMessage('Error al cargar el puzzle. Intenta recargar la página.');
+              }
+              return;
+            }
             
             if (isSubscribed) {
               setPuzzle({
@@ -58,9 +71,29 @@ const Board: React.FC<BoardProps> = ({ isPuzzle = false }) => {
                 themes: puzzleData.puzzle.themes
               });
               
+              // Mostrar la posición inicial
               setGame(new Chess(puzzleFen));
-              setMessage('Tu turno - Mueve las blancas');
-              setCurrentMoveIndex(0); // Reseteamos el índice de movimientos
+              setMessage('Observa el movimiento del oponente...');
+
+              // Realizar el primer movimiento del oponente después de un segundo
+              setTimeout(() => {
+                if (!isSubscribed) return;
+                
+                const gameCopy = new Chess(puzzleFen);
+                try {
+                  console.log('Intentando mover:', nextMove);
+                  const moveResult = gameCopy.move(nextMove);
+                  if (!moveResult) {
+                    throw new Error(`Movimiento inválido: ${nextMove}`);
+                  }
+                  
+                  setGame(gameCopy);
+                  setMessage('Tu turno - Encuentra el mejor movimiento');
+                } catch (moveError) {
+                  console.error('Error al realizar el movimiento:', moveError);
+                  setMessage('Error al cargar el puzzle. Intenta recargar la página.');
+                }
+              }, 1000);
             }
           } catch (error) {
             console.error('Error al procesar el puzzle:', error);
