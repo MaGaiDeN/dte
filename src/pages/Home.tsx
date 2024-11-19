@@ -24,8 +24,8 @@ const Home = () => {
           </div>
         </div>
         <div className="auth-buttons">
-          <button className="btn-signup">Sign Up</button>
-          <button className="btn-login">Log In</button>
+          <Link to="/register" className="btn-signup">Sign Up</Link>
+          <Link to="/login" className="btn-login">Log In</Link>
         </div>
       </header>
 

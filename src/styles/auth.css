@@ -1,0 +1,151 @@
+/* Estilos compartidos para inputs de autenticación */
+.form-group {
+  margin-bottom: 1rem;
+  width: 100%;
+}
+
+.input-icon {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  background: #3a3734;
+  border: 1px solid #4a4745;
+  border-radius: 6px;
+}
+
+.input-icon > i:first-child {
+  position: absolute;
+  left: 16px;
+  color: #666;
+  font-size: 16px;
+  pointer-events: none;
+  min-width: 20px;
+}
+
+.input-icon input {
+  width: 100%;
+  height: 48px;
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 16px;
+  padding: 0 40px 0 66px;
+  outline: none;
+}
+
+.input-icon input::placeholder {
+  color: #999;
+  opacity: 1;
+}
+
+.input-icon:focus-within {
+  border-color: var(--color-accent);
+}
+
+/* Ajuste del header */
+.main-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background: #272522;
+  z-index: 100;
+  max-width: 100vw; /* Asegura que no exceda el ancho de la ventana */
+  box-sizing: border-box; /* Incluye padding en el ancho total */
+}
+
+/* Ajustes del logo con icono más grande */
+.logo {
+  display: flex;
+  align-items: center;
+  height: 60px; /* Aumentamos altura para acomodar el icono más grande */
+  color: var(--color-white);
+  font-size: 1.8rem;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.logo-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1; /* Ajustamos el line-height */
+  height: 100%;
+  justify-content: center;
+}
+
+.logo-icon {
+  color: var(--color-accent);
+  font-size: 6em; /* Duplicamos el tamaño del icono */
+  transform: scaleX(-1);
+  margin-right: 0.8rem;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.logo-chess,
+.logo-match {
+  font-size: 1.6rem; /* Aumentamos el tamaño del texto */
+  letter-spacing: -0.5px;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Ajustes de los botones para evitar que se salgan */
+.auth-buttons {
+  display: flex;
+  gap: 0.5rem; /* Reducimos el gap entre botones */
+  align-items: center;
+  margin-left: 1rem; /* Añadimos margen izquierdo */
+  flex-shrink: 0; /* Evita que los botones se encojan */
+}
+
+/* Media queries para responsividad */
+@media (max-width: 768px) {
+  .main-header {
+    padding: 1rem; /* Reducimos el padding en móviles */
+  }
+
+  .logo {
+    height: 50px;
+  }
+
+  .logo-icon {
+    font-size: 4em; /* Ajustamos el tamaño para móviles */
+  }
+
+  .auth-buttons {
+    gap: 0.3rem; /* Reducimos aún más el gap en móviles */
+  }
+
+  .btn-signup, 
+  .btn-login {
+    padding: 0.4rem 0.8rem; /* Reducimos el padding de los botones */
+    font-size: 0.9rem; /* Reducimos el tamaño de fuente */
+  }
+}
+
+/* Ajustes adicionales para pantallas muy pequeñas */
+@media (max-width: 480px) {
+  .logo-text {
+    display: none; /* Opcionalmente, ocultar el texto en pantallas muy pequeñas */
+  }
+}
+
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #312e2b;
+  padding: 5rem 1rem 1rem 1rem; /* Aumentamos el padding superior */
+}
+
+.form-group.checkbox input[type="checkbox"] {
+  accent-color: var(--color-accent);
+}
+  
