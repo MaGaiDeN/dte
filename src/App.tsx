@@ -5,6 +5,7 @@ import Login from './pages/Login/Login';
 import Register from './pages/Register/Register';
 import ForgotPassword from './pages/ForgotPassword/ForgotPassword';
 import Lobby from './pages/Lobby/Lobby.tsx';
+import Challenge from './pages/Challenge/Challenge';
 import './styles/Home.css';
 import './styles/Board.css';
 import './App.css';
@@ -26,6 +27,7 @@ function App() {
           </Route>
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/lobby" element={<Lobby />} />
+          <Route path="/challenge/:challengeId" element={<Challenge />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
