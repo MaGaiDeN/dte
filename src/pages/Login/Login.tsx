@@ -1,16 +1,34 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import '../../styles/auth.css';
 import './Login.css';
+import { auth } from '../../config/firebase';
+import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 
 const Login = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Login:', { email, password });
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      navigate('/lobby');
+    } catch (error) {
+      console.error('Error al iniciar sesión:', error);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+      navigate('/lobby');
+    } catch (error) {
+      console.error('Error con Google login:', error);
+    }
   };
 
   return (
@@ -75,7 +93,7 @@ const Login = () => {
         <div className="auth-divider">O</div>
 
         <div className="social-buttons">
-          <button className="btn-social google">
+          <button className="btn-social google" onClick={handleGoogleLogin}>
             <i className="fab fa-google"></i>
             Continuar con Google
           </button>

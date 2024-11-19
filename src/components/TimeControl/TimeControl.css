@@ -1,0 +1,61 @@
+.time-control {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.time-control h3 {
+  color: var(--color-white);
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.time-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  width: 100%;
+}
+
+.time-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  background: #3a3734;
+  border: 1px solid #4a4745;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.time-option:hover {
+  background: #4a4745;
+}
+
+.time-option.selected {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.time-option .time {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.time-option .name {
+  font-size: 0.9rem;
+  color: #999;
+  margin-top: 0.3rem;
+}
+
+.time-option.selected .name {
+  color: white;
+} 

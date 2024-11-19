@@ -1,18 +1,31 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import '../../styles/auth.css';
-import './Register.css';
+import { Link, useNavigate } from 'react-router-dom';
+import { auth } from '../../config/firebase';
+import { createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 
 const Register = () => {
-  const [username, setUsername] = useState('');
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [acceptTerms, setAcceptTerms] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Registro:', { username, email, password, acceptTerms });
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      navigate('/lobby');
+    } catch (error) {
+      console.error('Error al registrar:', error);
+    }
+  };
+
+  const handleGoogleSignup = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+      navigate('/lobby');
+    } catch (error) {
+      console.error('Error con Google signup:', error);
+    }
   };
 
   return (
@@ -42,19 +55,6 @@ const Register = () => {
               <input
                 type="text"
                 placeholder="Nombre de usuario"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="form-group">
-            <div className="input-icon">
-              <i className="fas fa-envelope"></i>
-              <input
-                type="email"
-                placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -66,31 +66,13 @@ const Register = () => {
             <div className="input-icon">
               <i className="fas fa-lock"></i>
               <input
-                type={showPassword ? "text" : "password"}
+                type="password"
                 placeholder="Contraseña"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
-              <button
-                type="button"
-                className="toggle-password"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                <i className={`fas fa-eye${showPassword ? '-slash' : ''}`}></i>
-              </button>
             </div>
-          </div>
-
-          <div className="form-group checkbox">
-            <label>
-              <input
-                type="checkbox"
-                checked={acceptTerms}
-                onChange={(e) => setAcceptTerms(e.target.checked)}
-              />
-              <span>Mantenerme actualizado con consejos y ofertas especiales</span>
-            </label>
           </div>
 
           <button type="submit" className="btn-continue">
@@ -101,7 +83,7 @@ const Register = () => {
         <div className="auth-divider">O</div>
 
         <div className="social-buttons">
-          <button className="btn-social google">
+          <button className="btn-social google" onClick={handleGoogleSignup}>
             <i className="fab fa-google"></i>
             Continuar con Google
           </button>

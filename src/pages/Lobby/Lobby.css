@@ -1,0 +1,164 @@
+.lobby-container {
+  min-height: 100vh;
+  background-color: #312e2b;
+  display: flex;
+  flex-direction: column;
+}
+
+.lobby-header {
+  padding: 1rem 2rem;
+  background: #272522;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: white;
+}
+
+.logo-icon {
+  font-size: 2rem;
+  color: var(--color-accent);
+}
+
+.logo-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.logo-chess {
+  color: white;
+  font-weight: bold;
+}
+
+.logo-match {
+  color: var(--color-accent);
+  font-weight: bold;
+}
+
+.btn-logout {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #3a3734;
+  border: 1px solid #4a4745;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-logout:hover {
+  background: #4a4745;
+}
+
+.lobby-content {
+  flex: 1;
+  padding: 2rem;
+}
+
+.lobby-footer {
+  padding: 1rem 2rem;
+  background: #272522;
+  display: flex;
+  justify-content: center;
+}
+
+.btn-puzzles {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.8rem 1.5rem;
+  background: var(--color-accent);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.btn-puzzles:hover {
+  opacity: 0.9;
+}
+
+.game-count-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin: 2rem 0;
+}
+
+.game-count-section h3 {
+  color: white;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.game-count-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.game-count-button {
+  background: #3a3734;
+  border: 1px solid #4a4745;
+  border-radius: 6px;
+  color: white;
+  padding: 0.8rem 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 100px;
+  text-align: center;
+}
+
+.game-count-button:hover {
+  background: #4a4745;
+}
+
+.game-count-button.active {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.lobby-card {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: #272522;
+  border-radius: 8px;
+}
+
+.btn-create-challenge {
+  margin-top: 2rem;
+  display: block;
+  width: 100%;
+  padding: 1rem;
+  background: var(--color-accent);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.btn-create-challenge:hover {
+  opacity: 0.9;
+}
+
+.match-settings {
+  margin-bottom: 2rem;
+} 
