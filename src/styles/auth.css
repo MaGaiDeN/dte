@@ -44,20 +44,9 @@
 }
 
 /* Ajuste del header */
-.main-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 2rem;
-  width: 100%;
-  position: fixed;
-  top: 0;
-  left: 0;
-  background: #272522;
-  z-index: 100;
-  max-width: 100vw; /* Asegura que no exceda el ancho de la ventana */
-  box-sizing: border-box; /* Incluye padding en el ancho total */
-}
+/* .main-header {
+  display: none;
+} */
 
 /* Ajustes del logo con icono más grande */
 .logo {
@@ -80,7 +69,7 @@
 
 .logo-icon {
   color: var(--color-accent);
-  font-size: 6em; /* Duplicamos el tamaño del icono */
+  font-size: 2.2em; /* Tamaño fijo del icono */
   transform: scaleX(-1);
   margin-right: 0.8rem;
   height: 100%;
@@ -111,11 +100,16 @@
   }
 
   .logo {
-    height: 50px;
+    height: 40px;
   }
 
   .logo-icon {
-    font-size: 4em; /* Ajustamos el tamaño para móviles */
+    font-size: 2.2em; /* Mantenemos el mismo tamaño */
+  }
+
+  .logo-chess,
+  .logo-match {
+    font-size: 1.3rem;
   }
 
   .auth-buttons {
@@ -142,7 +136,79 @@
   align-items: center;
   justify-content: center;
   background-color: #312e2b;
-  padding: 5rem 1rem 1rem 1rem; /* Aumentamos el padding superior */
+  padding: 2rem 1rem;
+}
+
+.auth-card {
+  position: relative;
+  background: #272522;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin: auto;
+  box-sizing: border-box;
+}
+
+/* Ajustes para diferentes tamaños de pantalla */
+@media (max-width: 480px) {
+  .auth-container {
+    padding: 1rem;
+    align-items: flex-start;
+  }
+
+  .auth-card {
+    padding: 1.5rem;
+  }
+}
+
+/* Ajustes para pantallas más grandes */
+@media (min-width: 768px) {
+  .auth-card {
+    max-width: 380px;
+  }
+}
+
+/* Ajustes de espaciado interno */
+.auth-card h2 {
+  margin: 1rem 0 0.5rem;
+}
+
+.auth-card .auth-subtitle {
+  margin-bottom: 1.5rem;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.social-buttons {
+  margin-top: 1rem;
+}
+
+.auth-links {
+  margin-top: 1rem;
+}
+
+/* Ajustamos el logo para el formulario */
+.auth-card .logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  margin-bottom: 2rem;
+  text-decoration: none;
+}
+
+.auth-card .logo-icon {
+  color: var(--color-accent);
+  font-size: 2.2em;
+  transform: scaleX(-1);
+  margin-right: 0.8rem;
+  height: 100%;
+  display: flex;
+  align-items: center;
 }
 
 .form-group.checkbox input[type="checkbox"] {
