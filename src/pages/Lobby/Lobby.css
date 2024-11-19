@@ -3,6 +3,8 @@
   background-color: #312e2b;
   display: flex;
   flex-direction: column;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 .lobby-header {
@@ -13,6 +15,7 @@
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
+  box-sizing: border-box;
 }
 
 .logo {
@@ -54,6 +57,9 @@
   border: 2px solid var(--color-accent);
   margin-left: 1rem;
   white-space: nowrap;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .btn-logout:hover {
@@ -177,8 +183,8 @@
   }
   
   .btn-logout {
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
+    padding: 8px 12px;
+    font-size: 14px;
   }
 }
 

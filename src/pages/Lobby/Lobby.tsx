@@ -1,5 +1,6 @@
+// @ts-ignore
 import { useState, useEffect } from 'react';
-import { MatchConfig, DEFAULT_MATCH_CONFIG } from '../../components/MatchSettings/types/match';
+import { MatchConfig, TIME_CONTROL_OPTIONS } from '../../components/MatchSettings/types/match';
 import TimeControl from '../../components/TimeControl/TimeControl';
 import MatchSettings from '../../components/MatchSettings/MatchSettings';
 import './Lobby.css';
@@ -7,7 +8,6 @@ import { auth } from '../../config/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useNavigate, Link } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
-import { TIME_CONTROL_OPTIONS } from '../../components/TimeControl/constants';
 
 
 const Lobby = () => {
@@ -61,7 +61,7 @@ const Lobby = () => {
         </Link>
         <button onClick={handleLogout} className="btn-logout">
           <i className="fas fa-sign-out-alt"></i>
-          Cerrar sesión
+          Logout
         </button>
       </div>
 

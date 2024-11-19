@@ -1,11 +1,6 @@
 import React from 'react';
+import { TimeControlOption } from '../MatchSettings/types/match';
 import './TimeControl.css';
-
-interface TimeControlOption {
-  time: number;
-  increment: number;
-  name: string;
-}
 
 interface TimeControlProps {
   options: TimeControlOption[];
