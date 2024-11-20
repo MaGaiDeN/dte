@@ -1,0 +1,33 @@
+.chess-clock-container {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin: 10px 0;
+}
+
+.clock-display {
+  background-color: #2c3e50;
+  color: #ffffff;
+  padding: 15px 25px;
+  border-radius: 8px;
+  font-size: 24px;
+  font-weight: bold;
+  min-width: 120px;
+  text-align: center;
+}
+
+.player-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.player-name {
+  margin-bottom: 5px;
+  color: #34495e;
+  font-weight: 500;
+}
+
+.active {
+  background-color: #27ae60;
+} 

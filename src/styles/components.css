@@ -157,4 +157,29 @@
   .board-container {
     max-width: 600px;
   }
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: var(--bg-secondary);
+  border-radius: 4px;
+}
+
+.user-info i {
+  color: var(--text-secondary);
+}
+
+.user-info span {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.player-name {
+  font-weight: 500;
+  color: var(--text-primary);
+  text-align: center;
+  padding: 0.5rem;
 } 

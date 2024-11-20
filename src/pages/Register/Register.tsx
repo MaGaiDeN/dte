@@ -1,30 +1,125 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { auth } from '../../config/firebase';
-import { createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, updateProfile } from 'firebase/auth';
+import { auth, db } from '../../config/firebase';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { toast } from 'react-hot-toast';
+import './Register.css';
 
 const Register = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: ''
+  });
+
+  const validateUsername = async (username: string) => {
+    if (!/^[a-zA-Z0-9_]{3,15}$/.test(username)) {
+      return false;
+    }
+    
+    // Verificar si el username ya existe
+    const usersRef = doc(db, 'usernames', username.toLowerCase());
+    const docSnap = await getDoc(usersRef);
+    return !docSnap.exists();
+  };
+
+  const saveUserData = async (uid: string, username: string, email: string, photoURL?: string) => {
+    try {
+      // Guardar el username en una colección separada para búsqueda rápida
+      await setDoc(doc(db, 'usernames', username.toLowerCase()), {
+        uid: uid
+      });
+
+      // Guardar los datos del usuario
+      await setDoc(doc(db, 'users', uid), {
+        username,
+        email,
+        createdAt: new Date(),
+        rating: 1200,
+        photoURL: photoURL || null
+      });
+      
+      await updateProfile(auth.currentUser!, {
+        displayName: username,
+        photoURL: photoURL || null
+      });
+    } catch (error) {
+      console.error('Error guardando datos de usuario:', error);
+      throw error;
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const isValidUsername = await validateUsername(formData.username);
+      if (!isValidUsername) {
+        toast.error('Nombre de usuario no válido o ya está en uso');
+        return;
+      }
+
+      const userCredential = await createUserWithEmailAndPassword(
+        auth, 
+        formData.email, 
+        formData.password
+      );
+      
+      await saveUserData(
+        userCredential.user.uid, 
+        formData.username, 
+        formData.email
+      );
+      
+      toast.success('¡Cuenta creada exitosamente!');
       navigate('/lobby');
-    } catch (error) {
-      console.error('Error al registrar:', error);
+    } catch (error: any) {
+      if (error.code === 'auth/email-already-in-use') {
+        toast.error('Este email ya está registrado');
+      } else {
+        toast.error('Error al crear la cuenta');
+      }
     }
   };
 
   const handleGoogleSignup = async () => {
-    const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      
+      // Generar username único basado en el email
+      let username = result.user.email?.split('@')[0] || '';
+      let isValid = await validateUsername(username);
+      let counter = 1;
+      
+      while (!isValid && counter < 100) {
+        username = `${result.user.email?.split('@')[0]}_${counter}`;
+        isValid = await validateUsername(username);
+        counter++;
+      }
+
+      if (!isValid) {
+        toast.error('No se pudo generar un nombre de usuario único');
+        return;
+      }
+
+      await saveUserData(
+        result.user.uid, 
+        username, 
+        result.user.email!, 
+        result.user.photoURL || undefined
+      );
+      
+      toast.success('¡Cuenta creada exitosamente!');
       navigate('/lobby');
-    } catch (error) {
-      console.error('Error con Google signup:', error);
+    } catch (error: any) {
+      if (error.code === 'auth/popup-closed-by-user') {
+        toast.error('Registro cancelado');
+      } else {
+        toast.error('Error al registrarse con Google');
+      }
     }
   };
 
@@ -43,7 +138,7 @@ const Register = () => {
           </div>
         </Link>
 
-        <h2>Elige un nombre de usuario</h2>
+        <h2>Crear cuenta</h2>
         <p className="auth-subtitle">
           Este es el nombre que verán tus amigos y otros jugadores
         </p>
@@ -55,8 +150,25 @@ const Register = () => {
               <input
                 type="text"
                 placeholder="Nombre de usuario"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={formData.username}
+                onChange={(e) => setFormData({...formData, username: e.target.value})}
+                required
+                minLength={3}
+                maxLength={15}
+                pattern="^[a-zA-Z0-9_]+$"
+                title="El nombre de usuario debe tener entre 3 y 15 caracteres y solo puede contener letras, números y guiones bajos"
+              />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <div className="input-icon">
+              <i className="fas fa-envelope"></i>
+              <input
+                type="email"
+                placeholder="Email"
+                value={formData.email}
+                onChange={(e) => setFormData({...formData, email: e.target.value})}
                 required
               />
             </div>
@@ -68,15 +180,15 @@ const Register = () => {
               <input
                 type="password"
                 placeholder="Contraseña"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={formData.password}
+                onChange={(e) => setFormData({...formData, password: e.target.value})}
                 required
               />
             </div>
           </div>
 
           <button type="submit" className="btn-continue">
-            Continuar
+            Crear cuenta
           </button>
         </form>
 

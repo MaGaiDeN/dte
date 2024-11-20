@@ -1,6 +1,8 @@
 import { Chessboard } from 'react-chessboard';
 import { Chess, Square } from 'chess.js';
 import { useState, useEffect } from 'react';
+import ChessClock from '../ChessClock/ChessClock';
+import './Board.css';
 
 interface Puzzle {
   fen: string;
@@ -11,13 +13,18 @@ interface Puzzle {
 
 interface BoardProps {
   isPuzzle?: boolean;
+  timeControl?: {
+    time: number;
+    increment: number;
+  };
 }
 
-const Board: React.FC<BoardProps> = ({ isPuzzle = false }) => {
+const Board: React.FC<BoardProps> = ({ isPuzzle = false, timeControl }) => {
   const [game, setGame] = useState<Chess | null>(null);
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
   const [message, setMessage] = useState('Cargando puzzle...');
   const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
+  const [currentTurn, setCurrentTurn] = useState<'white' | 'black'>('white');
 
   useEffect(() => {
     let isSubscribed = true;
@@ -172,24 +179,47 @@ const Board: React.FC<BoardProps> = ({ isPuzzle = false }) => {
   }
 
   return (
-    <div className="puzzle-container">
+    <div className="board-container">
+      {timeControl && (
+        <ChessClock
+          timeInMinutes={timeControl.time}
+          increment={timeControl.increment}
+          isActive={currentTurn === 'black'}
+          color="black"
+          onTimeout={() => {/* manejar timeout */}}
+        />
+      )}
+
       {game && (
         <Chessboard 
           position={game.fen()} 
           boardOrientation="white"
           onPieceDrop={(from, to) => {
-            // Solo incluir promoción si es un movimiento de peón a última fila
-            const piece = game.get(from);
-            const isPromotion = piece?.type === 'p' && (to[1] === '8' || to[1] === '1');
-            
-            return makeAMove({
+            const result = makeAMove({
               from,
               to,
-              promotion: isPromotion ? 'q' : undefined
+              promotion: 'q'
             });
+            
+            if (result) {
+              setCurrentTurn(game.turn() === 'w' ? 'white' : 'black');
+            }
+            
+            return result;
           }}
         />
       )}
+
+      {timeControl && (
+        <ChessClock
+          timeInMinutes={timeControl.time}
+          increment={timeControl.increment}
+          isActive={currentTurn === 'white'}
+          color="white"
+          onTimeout={() => {/* manejar timeout */}}
+        />
+      )}
+
       {message && (
         <div className="puzzle-message" style={{ 
           marginTop: '1rem',

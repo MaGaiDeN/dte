@@ -1,12 +1,17 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import '../../styles/auth.css';
 import './Login.css';
 import { auth } from '../../config/firebase';
 import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { toast } from 'react-hot-toast';
+import { getDoc, doc } from 'firebase/firestore';
+import { db } from '../../config/firebase';
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirectPath = location.state?.redirect || '/lobby';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -15,19 +20,45 @@ const Login = () => {
     e.preventDefault();
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      navigate('/lobby');
-    } catch (error) {
+      navigate(redirectPath);
+    } catch (error: any) {
       console.error('Error al iniciar sesión:', error);
+      if (error.code === 'auth/invalid-credential') {
+        toast.error('Email o contraseña incorrectos');
+      } else if (error.code === 'auth/user-not-found') {
+        toast.error('Usuario no encontrado');
+      } else if (error.code === 'auth/wrong-password') {
+        toast.error('Contraseña incorrecta');
+      } else {
+        toast.error('Error al iniciar sesión');
+      }
     }
   };
 
   const handleGoogleLogin = async () => {
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
-      navigate('/lobby');
-    } catch (error) {
+      const result = await signInWithPopup(auth, provider);
+      
+      // Verificar si el usuario ya existe en Firestore
+      const userDoc = await getDoc(doc(db, 'users', result.user.uid));
+      
+      if (!userDoc.exists()) {
+        // Si es nuevo usuario, redirigir a la página de selección de username
+        navigate('/complete-profile', { 
+          state: { 
+            uid: result.user.uid,
+            email: result.user.email,
+            photoURL: result.user.photoURL
+          } 
+        });
+        return;
+      }
+      
+      navigate(redirectPath);
+    } catch (error: any) {
       console.error('Error con Google login:', error);
+      toast.error('Error al iniciar sesión con Google');
     }
   };
 
