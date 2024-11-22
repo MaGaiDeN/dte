@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import './Header.css';
 
 const Header = () => {
+  console.log('Renderizando Header');
   const { currentUser } = useAuth();
 
   const handleLogout = async () => {

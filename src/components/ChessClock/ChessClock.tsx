@@ -1,77 +1,72 @@
 import { useState, useEffect, useCallback } from 'react';
 import './ChessClock.css';
 
-interface ChessClockProps {
+interface GameClockProps {
   timeInMinutes: number;
   increment: number;
   isActive: boolean;
   color: 'white' | 'black';
-  onTimeout: () => void;
-  onTimeUpdate?: (time: number) => void;
+  onTimeout: () => Promise<void>;
+  onTimeUpdate: (time: number) => void;
+  remainingTime: number;
 }
 
-const ChessClock: React.FC<ChessClockProps> = ({
+const GameClock: React.FC<GameClockProps> = ({
   timeInMinutes,
   increment,
   isActive,
   color,
   onTimeout,
-  onTimeUpdate
+  onTimeUpdate,
+  remainingTime
 }) => {
-  const [timeLeft, setTimeLeft] = useState(timeInMinutes * 60);
-  const [lastTickTime, setLastTickTime] = useState<number | null>(null);
-  
-  const tick = useCallback(() => {
-    const now = Date.now();
-    if (lastTickTime) {
-      const delta = (now - lastTickTime) / 1000;
-      setTimeLeft(prev => {
-        const newTime = Math.max(0, prev - delta);
-        onTimeUpdate?.(newTime);
-        return newTime;
-      });
-    }
-    setLastTickTime(now);
-  }, [lastTickTime, onTimeUpdate]);
+  const [time, setTime] = useState(remainingTime);
 
   useEffect(() => {
-    let timer: number;
-    
-    if (isActive && timeLeft > 0) {
-      timer = window.requestAnimationFrame(function updateClock() {
-        tick();
-        timer = window.requestAnimationFrame(updateClock);
-      });
-    } else if (!isActive && lastTickTime) {
-      setTimeLeft(prev => prev + increment);
-      setLastTickTime(null);
-    }
+    setTime(remainingTime);
+  }, [remainingTime]);
 
-    if (timeLeft <= 0) {
-      onTimeout();
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    if (isActive && time > 0) {
+      interval = setInterval(() => {
+        setTime(prevTime => {
+          const newTime = prevTime - 1;
+          onTimeUpdate(newTime);
+          if (newTime <= 0) {
+            onTimeout();
+          }
+          return newTime;
+        });
+      }, 1000);
     }
 
     return () => {
-      if (timer) {
-        window.cancelAnimationFrame(timer);
+      if (interval) {
+        clearInterval(interval);
       }
     };
-  }, [isActive, timeLeft, increment, tick, onTimeout, lastTickTime]);
+  }, [isActive, time, onTimeout, onTimeUpdate]);
+
+  const getClockClasses = () => {
+    const classes = ['game-clock'];
+    if (isActive) classes.push('active');
+    if (time < 30) classes.push('warning');
+    return classes.join(' ');
+  };
 
   const formatTime = (seconds: number) => {
-    if (seconds < 10) {
-      return seconds.toFixed(1);
-    }
     const minutes = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${minutes}:${secs.toString().padStart(2, '0')}`;
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
   return (
-    <div className={`chess-clock ${color} ${isActive ? 'active' : ''}`}>
-      {formatTime(timeLeft)}
+    <div className={getClockClasses()}>
+      {formatTime(time)}
     </div>
   );
 };
 
-export default ChessClock; 
+export default GameClock; 

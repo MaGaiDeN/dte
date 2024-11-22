@@ -17,21 +17,21 @@ import { AuthProvider } from './context/AuthContext';
 
 // Componente para rutas protegidas
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [authState, setAuthState] = useState<'loading' | 'authenticated' | 'unauthenticated'>('loading');
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setIsAuthenticated(!!user);
+      setAuthState(user ? 'authenticated' : 'unauthenticated');
     });
 
     return () => unsubscribe();
   }, []);
 
-  if (isAuthenticated === null) {
+  if (authState === 'loading') {
     return <div>Cargando...</div>;
   }
 
-  if (!isAuthenticated) {
+  if (authState === 'unauthenticated') {
     return <Navigate to="/login" replace />;
   }
 

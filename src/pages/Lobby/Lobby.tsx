@@ -16,10 +16,18 @@ import Header from '../../components/Header/Header';
 
 
 const Lobby = () => {
+  console.log('Renderizando Lobby');
+  
   const navigate = useNavigate();
   const [userData, setUserData] = useState<{username: string} | null>(null);
 
   useEffect(() => {
+    console.log('Componentes importados:', {
+      TimeControl: !!TimeControl,
+      MatchSettings: !!MatchSettings,
+      Header: !!Header
+    });
+
     console.log('Iniciando efecto de autenticación en Lobby');
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       console.log('Estado de autenticación cambiado:', !!user);
@@ -92,17 +100,19 @@ const Lobby = () => {
 
       const challengeRef = await addDoc(collection(db, 'challenges'), challengeData);
       
-      console.log('Reto creado con ID:', challengeRef.id);
+      if (!challengeRef.id) {
+        throw new Error('No se pudo obtener el ID del reto');
+      }
       
-      toast.success('¡Reto creado! Redirigiendo...');
+      toast.success('¡Reto creado!');
       navigate(`/challenge/${challengeRef.id}`);
-
+      
     } catch (error: any) {
-      console.error('Error detallado en handleCreateChallenge:', error);
-      if (error.code === 'permission-denied') {
-        toast.error('Error de permisos. Por favor, verifica tu sesión');
+      console.error('Error al crear reto:', error);
+      if (error.code === 'resource-exhausted') {
+        toast.error('Se ha excedido el límite de operaciones. Intenta más tarde.');
       } else {
-        toast.error('Error al crear el reto. Por favor, inténtalo de nuevo');
+        toast.error('Error al crear el reto');
       }
     }
   };
@@ -121,7 +131,7 @@ const Lobby = () => {
   };
 
   return (
-    <div className="page-container">
+    <div className="lobby-container">
       <Header />
       <div className="lobby-content">
         <div className="lobby-card">
