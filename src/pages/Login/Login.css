@@ -27,7 +27,7 @@
 }
 
 .form-group {
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
   width: 100%;
 }
 
@@ -36,18 +36,25 @@
   width: 100%;
   display: flex;
   align-items: center;
-  background: #3a3734;
-  border: 1px solid #4a4745;
-  border-radius: 6px;
+  background: var(--color-button-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  transition: all var(--transition-quick);
+}
+
+.input-icon > i {
+  position: absolute;
+  color: var(--color-text-muted);
+  font-size: 1.1rem;
 }
 
 .input-icon > i:first-child {
-  position: absolute;
-  left: 16px;
-  color: #666;
-  font-size: 16px;
-  pointer-events: none;
-  min-width: 20px;
+  left: 1rem;
+}
+
+.input-icon > i:last-child {
+  right: 1rem;
+  cursor: pointer;
 }
 
 .input-icon input {
@@ -55,44 +62,63 @@
   height: 48px;
   background: transparent;
   border: none;
-  color: white;
-  font-size: 16px;
-  padding: 0 40px 0 66px;
-  outline: none;
+  color: var(--color-white);
+  font-size: 1rem;
+  font-family: var(--font-text);
+  padding: 0 3rem;
 }
 
 .input-icon input::placeholder {
-  color: #999;
-  opacity: 1;
-  padding-left: 0;
-}
-
-.input-icon:focus-within {
-  border-color: var(--color-accent);
-}
-
-@media (max-width: 480px) {
-  .input-icon input {
-    font-size: 14px;
-    padding: 0 40px 0 66px;
-  }
-  
-  .input-icon > i:first-child {
-    font-size: 14px;
-  }
+  color: var(--color-text-muted);
+  opacity: 0.8;
 }
 
 .toggle-password {
   position: absolute;
-  right: 16px;
+  right: 1rem;
   background: none;
   border: none;
-  color: #666;
+  color: var(--color-text-muted);
   cursor: pointer;
-  padding: 8px;
+  padding: 0.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: color var(--transition-quick);
+}
+
+.toggle-password:hover {
+  color: var(--color-accent);
+}
+
+.input-icon:hover {
+  border-color: var(--color-accent);
+}
+
+.input-icon:focus-within {
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-accent);
+}
+
+.input-icon.error {
+  border-color: #dc3545;
+}
+
+.input-error {
+  color: #dc3545;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 480px) {
+  .input-icon input {
+    font-size: 0.9rem;
+    padding: 0 2.5rem;
+  }
+  
+  .input-icon > i {
+    font-size: 1rem;
+  }
 }
 
 .btn-continue {

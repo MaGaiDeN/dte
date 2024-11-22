@@ -1,78 +1,52 @@
-#root {
-  max-width: 100%;
-  margin: 0 auto;
-  padding: 0;
-  text-align: center;
+.page-container {
+  min-height: 100vh;
+  padding-top: var(--header-height);
+  display: flex;
+  flex-direction: column;
 }
 
-@media (min-width: 768px) {
-  #root {
-    max-width: 1280px;
-    padding: 2rem;
-  }
+.content-container {
+  flex: 1;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
 .logo {
-  font-size: 1.4em;
-  font-weight: bold;
   display: flex;
   align-items: center;
-  height: 40px;
+  gap: 0.5rem;
+  text-decoration: none;
   color: var(--color-white);
+}
+
+.logo-icon {
+  color: var(--color-accent);
+  font-size: 1.5em;
+  transform: scaleX(-1);
 }
 
 .logo-text {
   display: flex;
   flex-direction: column;
   line-height: 0.8;
-  height: 100%;
-  justify-content: center;
-}
-
-.logo-icon {
-  color: var(--color-accent);
-  font-size: 1.4em;
-  transform: scaleX(-1);
-  margin-right: 0.5rem;
-  height: 100%;
-  display: flex;
-  align-items: center;
 }
 
 .logo-chess {
-  font-size: 1.4em;
-  letter-spacing: -0.5px;
-  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
   color: var(--color-white);
 }
 
 .logo-match {
-  font-size: 1.4em;
-  letter-spacing: -0.5px;
-  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
   color: var(--color-accent);
 }
 
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+@media (max-width: 768px) {
+  .content-container {
+    padding: 10px;
   }
-  to {
-    transform: rotate(360deg);
+  
+  .logo-text {
+    display: none;
   }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
 }

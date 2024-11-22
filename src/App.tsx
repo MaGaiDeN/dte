@@ -13,6 +13,7 @@ import CompleteProfile from './pages/CompleteProfile/CompleteProfile';
 import './styles/Home.css';
 import './styles/Board.css';
 import './App.css';
+import { AuthProvider } from './context/AuthContext';
 
 // Componente para rutas protegidas
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -39,49 +40,51 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 function App() {
   return (
-    <BrowserRouter>
-      <div className="app-container">
-        <Routes>
-          <Route index element={<Home />} />
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          
-          {/* Rutas protegidas */}
-          <Route path="/lobby" element={
-            <ProtectedRoute>
-              <Lobby />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/challenge/:challengeId" element={
-            <ProtectedRoute>
-              <Challenge />
-            </ProtectedRoute>
-          } />
-
-          <Route path="/play">
-            <Route path="computer" element={<Board />} />
-            <Route path="online" element={
+    <AuthProvider>
+      <BrowserRouter>
+        <div className="app-container">
+          <Routes>
+            <Route index element={<Home />} />
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            
+            {/* Rutas protegidas */}
+            <Route path="/lobby" element={
               <ProtectedRoute>
-                <Board />
+                <Lobby />
               </ProtectedRoute>
             } />
-            <Route path="friend" element={
+            
+            <Route path="/challenge/:challengeId" element={
               <ProtectedRoute>
-                <Board />
+                <Challenge />
               </ProtectedRoute>
             } />
-            <Route path="puzzle" element={<Board isPuzzle={true} />} />
-          </Route>
 
-          <Route path="/complete-profile" element={<CompleteProfile />} />
+            <Route path="/play">
+              <Route path="computer" element={<Board />} />
+              <Route path="online" element={
+                <ProtectedRoute>
+                  <Board />
+                </ProtectedRoute>
+              } />
+              <Route path="friend" element={
+                <ProtectedRoute>
+                  <Board />
+                </ProtectedRoute>
+              } />
+              <Route path="puzzle" element={<Board isPuzzle={true} />} />
+            </Route>
 
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </div>
-    </BrowserRouter>
+            <Route path="/complete-profile" element={<CompleteProfile />} />
+
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 

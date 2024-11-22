@@ -1,0 +1,44 @@
+.main-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--header-height);
+  background: #262522;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 2rem;
+  z-index: 1000;
+  box-shadow: var(--shadow-sm);
+}
+
+.auth-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-signup, 
+.btn-login {
+  padding: 0.5rem 1rem;
+  border-radius: var(--border-radius-sm);
+  font-weight: 600;
+  transition: all var(--transition-smooth);
+}
+
+.btn-signup {
+  background-color: var(--color-accent);
+  color: var(--color-white);
+}
+
+.btn-login {
+  background-color: transparent;
+  color: var(--color-white);
+  border: 1px solid var(--color-accent);
+}
+
+@media (max-width: 768px) {
+  .main-header {
+    padding: 0 1rem;
+  }
+} 

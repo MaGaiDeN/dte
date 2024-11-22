@@ -5,6 +5,7 @@ import { db, auth } from '../../config/firebase';
 import { updateProfile } from 'firebase/auth';
 import { toast } from 'react-hot-toast';
 import './CompleteProfile.css';
+import Header from '../../components/Header/Header';
 
 const CompleteProfile = () => {
   const navigate = useNavigate();
@@ -61,39 +62,42 @@ const CompleteProfile = () => {
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <h2>Completa tu perfil</h2>
-        <p className="auth-subtitle">
-          Solo necesitamos un nombre de usuario para continuar
-        </p>
+    <div className="page-container">
+      <Header />
+      <div className="auth-container">
+        <div className="auth-card">
+          <h2>Completa tu perfil</h2>
+          <p className="auth-subtitle">
+            Solo necesitamos un nombre de usuario para continuar
+          </p>
 
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <div className="input-icon">
-              <i className="fas fa-user"></i>
-              <input
-                type="text"
-                placeholder="Nombre de usuario"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                minLength={3}
-                maxLength={15}
-                pattern="^[a-zA-Z0-9_]+$"
-                title="El nombre de usuario debe tener entre 3 y 15 caracteres y solo puede contener letras, números y guiones bajos"
-              />
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <div className="input-icon">
+                <i className="fas fa-user"></i>
+                <input
+                  type="text"
+                  placeholder="Nombre de usuario"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                  minLength={3}
+                  maxLength={15}
+                  pattern="^[a-zA-Z0-9_]+$"
+                  title="El nombre de usuario debe tener entre 3 y 15 caracteres y solo puede contener letras, números y guiones bajos"
+                />
+              </div>
             </div>
-          </div>
 
-          <div className="form-info">
-            <p>Email: {email}</p>
-          </div>
+            <div className="form-info">
+              <p>Email: {email}</p>
+            </div>
 
-          <button type="submit" className="btn-continue">
-            Completar perfil
-          </button>
-        </form>
+            <button type="submit" className="btn-continue">
+              Completar perfil
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );

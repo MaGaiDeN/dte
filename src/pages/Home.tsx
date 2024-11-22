@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import '../styles/Home.css';
 import { useEffect } from 'react';
 import Board from '../components/Board/Board';
+import Header from '../components/Header/Header';
 
 const Home = () => {
   useEffect(() => {
@@ -14,21 +15,8 @@ const Home = () => {
   console.log('Estilos cargados:', document.styleSheets);
   
   return (
-    <>
-      <header className="main-header">
-        <div className="logo">
-          <i className="fas fa-chess-knight logo-icon"></i>
-          <div className="logo-text">
-            <span className="logo-chess">CHESS</span>
-            <span className="logo-match">MATCH</span>
-          </div>
-        </div>
-        <div className="auth-buttons">
-          <Link to="/register" className="btn-signup">Sign Up</Link>
-          <Link to="/login" className="btn-login">Log In</Link>
-        </div>
-      </header>
-
+    <div className="page-container">
+      <Header />
       <div className="home-container">
         <div className="game-options">
           <h1>Play Chess Online on the #1 Site!</h1>
@@ -71,7 +59,7 @@ const Home = () => {
           <button className="game-button chess-today">Chess Today</button>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

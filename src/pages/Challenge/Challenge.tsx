@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Chessboard } from 'react-chessboard';
-import { Chess } from 'chess.js';
+import { Chess, Square } from 'chess.js';
 import { doc, updateDoc, onSnapshot, arrayUnion, getDoc } from 'firebase/firestore';
 import { db, auth } from '../../config/firebase';
 import './Challenge.css';
 import { toast } from 'react-hot-toast';
 import GameClock from '../../components/ChessClock/ChessClock';
+import Header from '../../components/Header/Header';
 
 // Definir la interfaz Challenge aquí ya que no la tenemos importada
 interface Challenge {
@@ -53,22 +54,11 @@ interface ChallengeState {
   };
 }
 
-interface Move {
-  from: string;
-  to: string;
-  promotion?: string;
-  piece?: string;
-  color?: 'white' | 'black';
-  san?: string;
-}
-
 const Challenge = () => {
   // Estados básicos del juego
   const [game, setGame] = useState(new Chess());
   const [isPlayerTurn, setIsPlayerTurn] = useState(false);
   const [playerColor, setPlayerColor] = useState<'white' | 'black' | null>(null);
-  const [timeWhite, setTimeWhite] = useState(0);
-  const [timeBlack, setTimeBlack] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
   // Estado del challenge
@@ -164,10 +154,6 @@ const Challenge = () => {
   // Efecto para manejar los tiempos
   useEffect(() => {
     if (!challengeState.gameStarted || !challengeState.challenge) return;
-
-    const initialTime = challengeState.challenge.config.timeControl.time * 60;
-    setTimeWhite(initialTime);
-    setTimeBlack(initialTime);
   }, [challengeState.gameStarted, challengeState.challenge]);
 
   useEffect(() => {
@@ -207,41 +193,44 @@ const Challenge = () => {
   }
 
   // Manejar movimientos
-  const handleMove = async (move: Move) => {
-    if (!isPlayerTurn || !challengeId || !auth.currentUser) return;
+  const handleMove = (sourceSquare: Square, targetSquare: Square, piece: string): boolean => {
+    if (!isPlayerTurn || !challengeId || !auth.currentUser) return false;
 
     try {
       const newGame = new Chess(game.fen());
-      const result = newGame.move(move);
+      const result = newGame.move({
+        from: sourceSquare,
+        to: targetSquare,
+        promotion: piece[1] === 'P' ? 'q' : undefined
+      });
       
-      if (!result) return;
+      if (!result) return false;
 
-      const challengeRef = doc(db, 'challenges', challengeId);
-      await updateDoc(challengeRef, {
+      // Actualizar Firebase en segundo plano
+      updateDoc(doc(db, 'challenges', challengeId), {
         fen: newGame.fen(),
-        lastMove: {
-          from: move.from,
-          to: move.to,
-          promotion: move.promotion,
-          piece: move.piece,
-          color: playerColor
-        },
+        lastMove: { from: sourceSquare, to: targetSquare, piece, color: playerColor },
         currentTurn: playerColor === 'white' ? 'black' : 'white',
         moves: arrayUnion({
-          from: move.from,
-          to: move.to,
-          piece: move.piece,
+          from: sourceSquare,
+          to: targetSquare,
+          piece: piece,
           san: result.san,
           timestamp: Date.now()
         })
+      }).catch(error => {
+        console.error('Error al realizar movimiento:', error);
+        toast.error('Error al realizar el movimiento');
       });
 
       setGame(newGame);
       setIsPlayerTurn(false);
+      return true;
 
     } catch (error) {
       console.error('Error al realizar movimiento:', error);
       toast.error('Error al realizar el movimiento');
+      return false;
     }
   };
 
@@ -279,111 +268,148 @@ const Challenge = () => {
     }
   };
 
+  const handleTimeUpdate = async (color: 'white' | 'black', time: number) => {
+    if (!challengeId) return;
+    
+    try {
+      const challengeRef = doc(db, 'challenges', challengeId);
+      await updateDoc(challengeRef, {
+        [`timeLeft.${color}`]: time
+      });
+    } catch (error) {
+      console.error('Error al actualizar el tiempo:', error);
+    }
+  };
+
+  const handleTimeout = async (winner: 'white' | 'black') => {
+    if (!challengeId) return;
+    
+    try {
+      const challengeRef = doc(db, 'challenges', challengeId);
+      await updateDoc(challengeRef, {
+        status: 'completed',
+        winner,
+        result: winner === 'white' ? '1-0' : '0-1',
+        endReason: 'timeout'
+      });
+    } catch (error) {
+      toast.error('Error al finalizar la partida por tiempo');
+    }
+  };
+
   return (
-    <div className="challenge-container">
-      <header className="main-header">
-        <Link to="/" className="logo">
-          <i className="fas fa-chess-knight logo-icon"></i>
-          <div className="logo-text">
-            <span className="logo-chess">CHESS</span>
-            <span className="logo-match">MATCH</span>
-          </div>
-        </Link>
-        {auth.currentUser ? (
-          <div className="user-menu">
-            {/* Aquí puedes agregar el menú de usuario si lo necesitas */}
-          </div>
-        ) : (
-          <div className="auth-buttons">
-            <Link to="/register" className="btn-signup">Sign Up</Link>
-            <Link to="/login" className="btn-login">Log In</Link>
-          </div>
-        )}
-      </header>
-
-      <div className="game-content">
-        <div className="game-info">
-          <div className="match-details">
-            <div className="time-details">
-              <div>Blancas: {timeWhite}s</div>
-              <div>Negras: {timeBlack}s</div>
+    <div className="page-container">
+      <Header />
+      <div className="challenge-container">
+        <div className="game-layout">
+          {/* Panel izquierdo con controles de partida */}
+          <div className="left-panel">
+            {/* Jugador Negro */}
+            <div className="player-box black">
+              <div className="player-avatar">
+                {/* Aquí podríamos agregar avatar del jugador */}
+              </div>
+              <div className="player-info">
+                <span className="player-name">
+                  {challengeState.players.blackUsername || 'Esperando...'}
+                </span>
+                <span className="player-rating">1500</span>
+              </div>
+              <GameClock
+                timeInMinutes={challengeState.challenge?.config.timeControl.time || 0}
+                increment={challengeState.challenge?.config.timeControl.increment || 0}
+                isActive={game.turn() === 'b'}
+                color="black"
+                onTimeout={async () => await handleTimeout('white')}
+                onTimeUpdate={(time) => handleTimeUpdate('black', time)}
+              />
             </div>
-            <div className="game-type">
-              <i className="fas fa-trophy"></i>
-              <span>{challengeState.challenge?.config.rated ? 'Clasificatoria' : 'Amistosa'}</span>
+
+            {/* Tablero */}
+            <div className="board-container">
+              <Chessboard 
+                position={game.fen()}
+                onPieceDrop={handleMove}
+                boardOrientation={playerColor === 'black' ? 'black' : 'white'}
+                customBoardStyle={{
+                  borderRadius: '4px',
+                  boxShadow: '0 2px 5px rgba(0, 0, 0, 0.3)'
+                }}
+              />
             </div>
-            <div className="games-count">
-              <i className="fas fa-chess-board"></i>
-              <span>
-                {challengeState.challenge?.config.numberOfGames === 1 
-                  ? '1 partida' 
-                  : `Al mejor de ${challengeState.challenge?.config.numberOfGames}`}
-              </span>
+
+            {/* Jugador Blanco */}
+            <div className="player-box white">
+              <div className="player-avatar">
+                {/* Aquí podríamos agregar avatar del jugador */}
+              </div>
+              <GameClock
+                timeInMinutes={challengeState.challenge?.config.timeControl.time || 0}
+                increment={challengeState.challenge?.config.timeControl.increment || 0}
+                isActive={game.turn() === 'w'}
+                color="white"
+                onTimeout={async () => await handleTimeout('black')}
+                onTimeUpdate={(time) => handleTimeUpdate('white', time)}
+              />
+              <div className="player-info">
+                <span className="player-name">
+                  {challengeState.players.whiteUsername || 'Esperando...'}
+                </span>
+                <span className="player-rating">1500</span>
+              </div>
+            </div>
+
+            {/* Controles de partida (estilo Lichess) */}
+            <div className="game-actions">
+              <div className="primary-actions">
+                <button 
+                  className="action-btn draw-btn"
+                  onClick={handleDrawOffer}
+                  disabled={!isPlayerTurn}
+                >
+                  <i className="fas fa-handshake"></i>
+                </button>
+                <button 
+                  className="action-btn resign-btn"
+                  onClick={handleResign}
+                >
+                  <i className="fas fa-flag"></i>
+                </button>
+              </div>
+              <div className="secondary-actions">
+                <button className="action-btn">
+                  <i className="fas fa-undo"></i>
+                </button>
+                <button className="action-btn">
+                  <i className="fas fa-forward"></i>
+                </button>
+                <button className="action-btn">
+                  <i className="fas fa-cog"></i>
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-        
-        <div className="game-board-container">
-          <div className="player-info black">
-            <GameClock
-              timeInMinutes={challengeState.challenge?.config.timeControl.time || 0}
-              increment={challengeState.challenge?.config.timeControl.increment || 0}
-              isActive={game.turn() === 'b'}
-              color="black"
-              onTimeout={() => {
-                toast.error('Tiempo agotado - Victoria de las blancas');
-              }}
-            />
-            <span className="player-name">
-              {challengeState.players.blackUsername || 'Esperando jugador...'}
-            </span>
-          </div>
 
-          <div className="game-board">
-            <Chessboard 
-              position={game.fen()}
-              onPieceDrop={(sourceSquare, targetSquare) => {
-                const move = {
-                  from: sourceSquare,
-                  to: targetSquare,
-                  promotion: 'q'
-                };
-                handleMove(move);
-                return true;
-              }}
-              boardOrientation={playerColor === 'black' ? 'black' : 'white'}
-            />
-          </div>
+          {/* Panel derecho */}
+          <div className="right-panel">
+            <div className="game-info-header">
+              <div className="time-control">
+                <i className="fas fa-clock"></i>
+                <span>{`${challengeState.challenge?.config.timeControl.time}+${challengeState.challenge?.config.timeControl.increment}`}</span>
+              </div>
+              <div className="game-type">
+                {challengeState.challenge?.config.rated ? 
+                  <i className="fas fa-trophy" title="Partida clasificatoria"></i> :
+                  <i className="fas fa-handshake" title="Partida amistosa"></i>
+                }
+              </div>
+            </div>
 
-          <div className="player-info white">
-            <GameClock
-              timeInMinutes={challengeState.challenge?.config.timeControl.time || 0}
-              increment={challengeState.challenge?.config.timeControl.increment || 0}
-              isActive={game.turn() === 'w'}
-              color="white"
-              onTimeout={() => {
-                toast.error('Tiempo agotado - Victoria de las negras');
-              }}
-            />
-            <span className="player-name">
-              {challengeState.players.whiteUsername || 'Esperando jugador...'}
-            </span>
+            {/* Aquí podríamos agregar el historial de movimientos */}
+            <div className="moves-history">
+              {/* Lista de movimientos */}
+            </div>
           </div>
-        </div>
-
-        <div className="game-controls">
-          <button className="btn-control resign" onClick={handleResign}>
-            <i className="fas fa-flag"></i>
-            Abandonar
-          </button>
-          <button 
-            className="btn-control"
-            onClick={() => handleDrawOffer()}
-            disabled={!isPlayerTurn}
-          >
-            <i className="fas fa-handshake"></i>
-            Ofrecer tablas
-          </button>
         </div>
       </div>
     </div>

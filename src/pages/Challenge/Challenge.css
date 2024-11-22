@@ -1,233 +1,210 @@
 .challenge-container {
+  display: flex;
   min-height: 100vh;
-  background-color: #312e2b;
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  overflow-x: hidden;
+  background: #262421;
+  color: #fff;
 }
 
-.main-header {
+.game-layout {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
   width: 100%;
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
-  box-sizing: border-box;
-  background-color: #272522;
+  padding: 20px;
+  gap: 20px;
 }
 
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  text-decoration: none;
-  color: white;
-}
-
-.logo-icon {
-  font-size: 2rem;
-  color: var(--color-accent);
-}
-
-.logo-text {
-  display: flex;
-  flex-direction: column;
-}
-
-.logo-chess {
-  color: white;
-  font-weight: bold;
-}
-
-.logo-match {
-  color: var(--color-accent);
-  font-weight: bold;
-}
-
-.game-content {
+.left-panel {
   flex: 1;
-  max-width: 800px;
-  margin: 2rem auto;
-  padding: 2rem;
-  background: #272522;
-  border-radius: 8px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 2rem;
+  gap: 20px;
 }
 
-.game-info {
-  width: 100%;
-  padding: 1rem;
-  background: #3a3734;
-  border: 1px solid #4a4745;
-  border-radius: var(--border-radius-md);
-  color: white;
-}
-
-.game-board-container {
+.player-box {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 1rem;
-  width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
+  padding: 8px 12px;
+  background: #363432;
+  border-radius: 4px;
+  gap: 8px;
+}
+
+.player-box.black {
+  flex-direction: row;
+}
+
+.player-box.white {
+  flex-direction: row-reverse;
 }
 
 .player-info {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  width: 100%;
-}
-
-.player-info.black {
-  order: 1;
-}
-
-.game-board {
-  order: 2;
-  width: 100%;
-  aspect-ratio: 1;
-}
-
-.player-info.white {
-  order: 3;
+  gap: 4px;
 }
 
 .player-name {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 500;
-  color: #e0e0e0;
+  color: #bababa;
 }
 
-.chess-clock {
-  width: 180px;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-size: 1.5rem;
-  font-weight: bold;
-  text-align: center;
-  background-color: #2c3e50;
-  color: #ffffff;
-  transition: background-color 0.3s ease;
+.player-rating {
+  font-size: 0.9rem;
+  color: #858585;
+  font-weight: 400;
 }
 
-.chess-clock.active {
-  background-color: #27ae60;
+.board-container {
+  aspect-ratio: 1;
+  width: 100%;
+  max-width: 650px;
+  margin: 0 auto;
+  border-radius: 3px;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
 }
 
-.chess-clock.white.active {
-  background-color: #27ae60;
-}
-
-.chess-clock.black.active {
-  background-color: #27ae60;
+.right-panel {
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .game-controls {
   display: flex;
-  gap: 1rem;
-  width: 100%;
-  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+  background: #363432;
+  border-radius: 4px;
+  padding: 8px;
 }
 
-.btn-control {
-  padding: 0.8rem 1.5rem;
+.control-btn {
+  width: 100%;
+  padding: 8px;
   border: none;
-  border-radius: 6px;
-  background: #3a3734;
-  border: 1px solid #4a4745;
+  background: transparent;
+  color: #bababa;
+  border-radius: 3px;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.control-btn:hover {
+  background: #404040;
+}
+
+.control-btn.resign:hover {
+  background: #ac524c;
   color: white;
-  cursor: pointer;
+}
+
+.control-btn.draw {
+  background: #4a4a4a;
+  color: white;
+}
+
+.control-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.game-info {
+  background: #363636;
+  padding: 16px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.time-control, .game-type {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  transition: all 0.2s;
-  font-weight: 500;
-  min-width: 120px;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: #b4b4b4;
+}
+
+/* Contenedor principal de acciones */
+.game-actions {
+  display: flex;
+  gap: 12px;
+  padding: 8px;
+  background: #363432;
+  border-radius: 4px;
+  margin-top: 12px;
+}
+
+/* Grupo de acciones primarias (tablas y rendirse) */
+.primary-actions {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+}
+
+/* Grupo de acciones secundarias (deshacer, rehacer, config) */
+.secondary-actions {
+  display: flex;
+  gap: 4px;
+  border-left: 1px solid #4a4a4a;
+  padding-left: 8px;
+}
+
+/* Estilo base para los botones de acción */
+.action-btn {
+  display: flex;
+  align-items: center;
   justify-content: center;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  color: #bababa;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 36px;
+  height: 36px;
 }
 
-.btn-control:hover {
-  background: #4a4745;
+/* Estilos específicos para el botón de tablas */
+.action-btn.draw-btn {
+  flex: 1;
+  background: #4a4a4a;
 }
 
-.btn-control.resign {
-  background: var(--color-accent);
-  border-color: var(--color-accent);
+.action-btn.draw-btn:hover:not(:disabled) {
+  background: #595959;
 }
 
-.btn-control.resign:hover {
-  opacity: 0.9;
+.action-btn.draw-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
-.btn-control i {
+/* Estilos específicos para el botón de rendirse */
+.action-btn.resign-btn {
+  flex: 1;
+  background: #883835;
+}
+
+.action-btn.resign-btn:hover {
+  background: #a04440;
+}
+
+/* Estilos para los botones secundarios */
+.secondary-actions .action-btn:hover {
+  background: #404040;
+}
+
+/* Estilos para los iconos dentro de los botones */
+.action-btn i {
   font-size: 1.1rem;
 }
 
-.match-details {
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  padding: 1rem;
-  background: #3a3734;
-  border: 1px solid #4a4745;
-  border-radius: 6px;
-  margin-bottom: 1rem;
-}
-
-.time-details,
-.game-type,
-.games-count {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: white;
-}
-
-.match-details i {
-  color: var(--color-accent);
-  font-size: 1.2rem;
-}
-
-.match-details span {
-  font-weight: 500;
-  font-size: 1rem;
-}
-
-@media (max-width: 768px) {
-  .game-content {
-    padding: 1rem;
-    margin: 1rem;
-    gap: 1rem;
-  }
-  
-  .game-board {
-    width: 100%;
-    max-width: none;
-  }
-  
-  .game-controls {
-    flex-direction: column;
-  }
-  
-  .btn-control {
-    width: 100%;
-  }
-
-  .main-header {
-    padding: 0.8rem;
-  }
-
-  .match-details {
-    flex-direction: column;
-    gap: 1rem;
-  }
+/* Estado activo de los botones */
+.action-btn:active {
+  transform: scale(0.95);
 } 

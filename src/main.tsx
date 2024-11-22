@@ -5,7 +5,7 @@ import 'bootstrap/dist/js/bootstrap.bundle.min.js'
 import './styles/global.css'
 import './styles/components.css'
 import './index.css'
-import App from './App.tsx'
+import App from './App'
 
 console.log('Iniciando aplicación')
 const rootElement = document.getElementById('root')

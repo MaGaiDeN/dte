@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import './ChessClock.css';
 
 interface ChessClockProps {
@@ -7,35 +7,63 @@ interface ChessClockProps {
   isActive: boolean;
   color: 'white' | 'black';
   onTimeout: () => void;
+  onTimeUpdate?: (time: number) => void;
 }
 
-const GameClock: React.FC<ChessClockProps> = ({ timeInMinutes, increment, isActive, color, onTimeout }) => {
+const ChessClock: React.FC<ChessClockProps> = ({
+  timeInMinutes,
+  increment,
+  isActive,
+  color,
+  onTimeout,
+  onTimeUpdate
+}) => {
   const [timeLeft, setTimeLeft] = useState(timeInMinutes * 60);
+  const [lastTickTime, setLastTickTime] = useState<number | null>(null);
   
+  const tick = useCallback(() => {
+    const now = Date.now();
+    if (lastTickTime) {
+      const delta = (now - lastTickTime) / 1000;
+      setTimeLeft(prev => {
+        const newTime = Math.max(0, prev - delta);
+        onTimeUpdate?.(newTime);
+        return newTime;
+      });
+    }
+    setLastTickTime(now);
+  }, [lastTickTime, onTimeUpdate]);
+
   useEffect(() => {
-    let timer: NodeJS.Timeout;
+    let timer: number;
     
     if (isActive && timeLeft > 0) {
-      timer = setInterval(() => {
-        setTimeLeft(prev => {
-          if (prev <= 0) {
-            clearInterval(timer);
-            onTimeout();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    } else if (!isActive) {
+      timer = window.requestAnimationFrame(function updateClock() {
+        tick();
+        timer = window.requestAnimationFrame(updateClock);
+      });
+    } else if (!isActive && lastTickTime) {
       setTimeLeft(prev => prev + increment);
+      setLastTickTime(null);
     }
 
-    return () => clearInterval(timer);
-  }, [isActive, timeLeft, onTimeout, increment]);
+    if (timeLeft <= 0) {
+      onTimeout();
+    }
+
+    return () => {
+      if (timer) {
+        window.cancelAnimationFrame(timer);
+      }
+    };
+  }, [isActive, timeLeft, increment, tick, onTimeout, lastTickTime]);
 
   const formatTime = (seconds: number) => {
+    if (seconds < 10) {
+      return seconds.toFixed(1);
+    }
     const minutes = Math.floor(seconds / 60);
-    const secs = seconds % 60;
+    const secs = Math.floor(seconds % 60);
     return `${minutes}:${secs.toString().padStart(2, '0')}`;
   };
 
@@ -46,4 +74,4 @@ const GameClock: React.FC<ChessClockProps> = ({ timeInMinutes, increment, isActi
   );
 };
 
-export default GameClock; 
+export default ChessClock; 
