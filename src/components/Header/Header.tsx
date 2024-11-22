@@ -3,8 +3,9 @@ import { auth } from '../../config/firebase';
 import { signOut } from 'firebase/auth';
 import { useAuth } from '../../context/AuthContext';
 import './Header.css';
+import { memo } from 'react';
 
-const Header = () => {
+const Header = memo(() => {
   console.log('Renderizando Header');
   const { currentUser } = useAuth();
 
@@ -40,6 +41,6 @@ const Header = () => {
       </div>
     </header>
   );
-};
+});
 
 export default Header; 

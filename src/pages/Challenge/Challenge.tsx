@@ -10,6 +10,7 @@ import GameClock from '../../components/ChessClock/ChessClock';
 import Header from '../../components/Header/Header';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { playGameStartSound } from '../../utils/sounds';
+import MatchScoreTable from '../../components/MatchScoreTable/MatchScoreTable';
 
 // Definir la interfaz Challenge aquí ya que no la tenemos importada
 interface Challenge {
@@ -35,6 +36,9 @@ interface Challenge {
     offeredBy: string;
     offeredAt: number;
   };
+  whiteScore?: number;
+  blackScore?: number;
+  results?: Array<'1-0' | '0-1' | '½-½' | null>;
 }
 
 interface ChallengeState {
@@ -272,50 +276,93 @@ const Challenge = () => {
     });
   }, [isLoading, challengeState, playerColor, game]);
 
+  useEffect(() => {
+    if (!challengeId) return;
+
+    const unsubscribe = onSnapshot(doc(db, 'challenges', challengeId), (doc) => {
+      const data = doc.data();
+      if (!data) return;
+
+      // Actualizar el estado del juego
+      const newGame = new Chess(data.fen || game.fen());
+      setGame(newGame);
+      
+      // Actualizar el turno del jugador
+      const isCurrentPlayerTurn = 
+        (playerColor === 'white' && newGame.turn() === 'w') ||
+        (playerColor === 'black' && newGame.turn() === 'b');
+      
+      setIsPlayerTurn(isCurrentPlayerTurn);
+      
+      console.log('Estado actualizado:', {
+        fen: data.fen,
+        playerColor,
+        isCurrentPlayerTurn,
+        turn: newGame.turn()
+      });
+    });
+
+    return () => unsubscribe();
+  }, [challengeId, playerColor]);
+
+  useEffect(() => {
+    if (!challengeState.challenge) return;
+    
+    const hasAllPlayers = 
+      challengeState.challenge.players.white && 
+      challengeState.challenge.players.black;
+      
+    setGameStarted(!!hasAllPlayers);
+    
+    console.log('Estado del juego:', {
+      hasAllPlayers,
+      players: challengeState.challenge.players,
+      gameStarted
+    });
+  }, [challengeState.challenge]);
+
   if (isLoading) {
     return <div className="loading">Cargando reto...</div>;
   }
 
   // Manejar movimientos
-  const handleMove = (sourceSquare: Square, targetSquare: Square, piece: string): boolean => {
-    if (!isPlayerTurn || !challengeId || !auth.currentUser) return false;
-
-    try {
-      const newGame = new Chess(game.fen());
-      const result = newGame.move({
-        from: sourceSquare,
-        to: targetSquare,
-        promotion: piece[1] === 'P' ? 'q' : undefined
-      });
-      
-      if (!result) return false;
-
-      // Actualizar Firebase en segundo plano
-      updateDoc(doc(db, 'challenges', challengeId), {
-        fen: newGame.fen(),
-        lastMove: { from: sourceSquare, to: targetSquare, piece, color: playerColor },
-        currentTurn: playerColor === 'white' ? 'black' : 'white',
-        moves: arrayUnion({
-          from: sourceSquare,
-          to: targetSquare,
-          piece: piece,
-          san: result.san,
-          timestamp: Date.now()
-        })
-      }).catch(error => {
-        console.error('Error al realizar movimiento:', error);
-        toast.error('Error al realizar el movimiento');
-      });
-
-      setGame(newGame);
-      setIsPlayerTurn(false);
-      return true;
-
-    } catch (error) {
-      console.error('Error al realizar movimiento:', error);
-      toast.error('Error al realizar el movimiento');
+  const makeMove = (sourceSquare: Square, targetSquare: Square) => {
+    if (!isPlayerTurn || !challengeId || !auth.currentUser) {
       return false;
     }
+
+    const move = game.move({
+      from: sourceSquare,
+      to: targetSquare,
+      promotion: 'q'
+    });
+
+    if (move === null) return false;
+
+    // Crear una nueva instancia del juego para verificar el jaque mate
+    const gameCopy = new Chess(game.fen());
+    const isCheckmate = gameCopy.isGameOver() && gameCopy.isCheckmate();
+    
+    // Actualizar Firebase con el estado del juego
+    updateDoc(doc(db, 'challenges', challengeId), {
+      fen: game.fen(),
+      lastMove: { from: sourceSquare, to: targetSquare },
+      currentTurn: playerColor === 'white' ? 'black' : 'white',
+      ...(isCheckmate && {
+        status: 'completed',
+        winner: playerColor,
+        result: playerColor === 'white' ? '1-0' : '0-1',
+        endReason: 'checkmate',
+        completedAt: serverTimestamp()
+      })
+    }).catch(console.error);
+
+    // Mostrar mensaje de jaque mate
+    if (isCheckmate) {
+      toast.success('¡Jaque Mate! Has ganado la partida 🏆');
+    }
+
+    return true;
   };
 
   const handleDrawOffer = async () => {
@@ -425,7 +472,7 @@ const Challenge = () => {
               <div className="board-container">
                 <Chessboard 
                   position={game.fen()}
-                  onPieceDrop={handleMove}
+                  onPieceDrop={makeMove}
                   boardOrientation={playerColor === 'black' ? 'black' : 'white'}
                   customBoardStyle={{
                     borderRadius: '4px',
@@ -498,22 +545,20 @@ const Challenge = () => {
             <div className="card bg-dark text-light">
               <div className="card-header">
                 <div className="d-flex justify-content-between align-items-center">
-                  <div className="time-control">
-                    <i className="fas fa-clock me-2"></i>
-                    <span>{`${challengeState.challenge?.config.timeControl.time}+${challengeState.challenge?.config.timeControl.increment}`}</span>
-                  </div>
-                  <div className="game-type">
-                    {challengeState.challenge?.config.rated ? 
-                      <i className="fas fa-trophy" title="Partida clasificatoria"></i> :
-                      <i className="fas fa-handshake" title="Partida amistosa"></i>
-                    }
+                  <div className="game-info">
+                    <i className="fas fa-chess me-2"></i>
+                    <span>Partida {challengeState.currentGame} de {challengeState.challenge?.config.numberOfGames}</span>
                   </div>
                 </div>
               </div>
               <div className="card-body">
-                <div className="moves-history">
-                  {/* Lista de movimientos aquí */}
-                </div>
+                <MatchScoreTable
+                  whitePlayer={challengeState.players.whiteUsername}
+                  blackPlayer={challengeState.players.blackUsername}
+                  numberOfGames={challengeState.challenge?.config.numberOfGames || 1}
+                  results={challengeState.challenge?.results || []}
+                  currentGame={challengeState.currentGame}
+                />
               </div>
             </div>
           </div>

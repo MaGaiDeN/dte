@@ -132,4 +132,30 @@
     padding: 0.4rem 0.8rem;
     font-size: 0.9rem;
   }
+}
+
+.match-info {
+  font-size: 0.9rem;
+}
+
+.match-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.match-score {
+  color: var(--color-accent);
+  font-weight: 500;
+}
+
+.game-badges .badge {
+  font-size: 0.8rem;
+  padding: 0.4em 0.8em;
+}
+
+.time-control {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--color-text);
 } 
