@@ -1,217 +1,22 @@
-/* Estilos compartidos para inputs de autenticación */
-.form-group {
-  margin-bottom: 1rem;
-  width: 100%;
-}
-
-.input-icon {
-  position: relative;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  background: #3a3734;
-  border: 1px solid #4a4745;
-  border-radius: 6px;
-}
-
-.input-icon > i:first-child {
-  position: absolute;
-  left: 16px;
-  color: #666;
-  font-size: 16px;
-  pointer-events: none;
-  min-width: 20px;
-}
-
-.input-icon input {
-  width: 100%;
+/* Reemplazar los estilos personalizados con clases de Bootstrap */
+.btn-continue {
   height: 48px;
-  background: transparent;
-  border: none;
-  color: white;
-  font-size: 16px;
-  padding: 0 40px 0 66px;
-  outline: none;
+  font-weight: 600;
 }
 
-.input-icon input::placeholder {
-  color: #999;
-  opacity: 1;
-}
-
-.input-icon:focus-within {
-  border-color: var(--color-accent);
-}
-
-/* Ajuste del header */
-/* .main-header {
-  display: none;
-} */
-
-/* Ajustes del logo con icono más grande */
-.logo {
-  display: flex;
-  align-items: center;
-  height: 60px; /* Aumentamos altura para acomodar el icono más grande */
-  color: var(--color-white);
-  font-size: 1.8rem;
-  font-weight: bold;
-  text-decoration: none;
-}
-
-.logo-text {
-  display: flex;
-  flex-direction: column;
-  line-height: 1; /* Ajustamos el line-height */
-  height: 100%;
-  justify-content: center;
-}
-
-.logo-icon {
-  color: var(--color-accent);
-  font-size: 2.2em; /* Tamaño fijo del icono */
-  transform: scaleX(-1);
-  margin-right: 0.8rem;
-  height: 100%;
-  display: flex;
-  align-items: center;
-}
-
-.logo-chess,
-.logo-match {
-  font-size: 1.6rem; /* Aumentamos el tamaño del texto */
-  letter-spacing: -0.5px;
-  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
-}
-
-/* Ajustes de los botones para evitar que se salgan */
-.auth-buttons {
-  display: flex;
-  gap: 0.5rem; /* Reducimos el gap entre botones */
-  align-items: center;
-  margin-left: 1rem; /* Añadimos margen izquierdo */
-  flex-shrink: 0; /* Evita que los botones se encojan */
-}
-
-/* Media queries para responsividad */
-@media (max-width: 768px) {
-  .main-header {
-    padding: 1rem; /* Reducimos el padding en móviles */
-  }
-
-  .logo {
-    height: 40px;
-  }
-
-  .logo-icon {
-    font-size: 2.2em; /* Mantenemos el mismo tamaño */
-  }
-
-  .logo-chess,
-  .logo-match {
-    font-size: 1.3rem;
-  }
-
-  .auth-buttons {
-    gap: 0.3rem; /* Reducimos aún más el gap en móviles */
-  }
-
-  .btn-signup, 
-  .btn-login {
-    padding: 0.4rem 0.8rem; /* Reducimos el padding de los botones */
-    font-size: 0.9rem; /* Reducimos el tamaño de fuente */
-  }
-}
-
-/* Ajustes adicionales para pantallas muy pequeñas */
-@media (max-width: 480px) {
-  .logo-text {
-    display: none; /* Opcionalmente, ocultar el texto en pantallas muy pequeñas */
-  }
-}
-
-.auth-container {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #312e2b;
-  padding: 2rem 1rem;
+.btn-social {
+  height: 48px;
 }
 
 .auth-card {
-  position: relative;
-  background: #272522;
-  padding: 2rem;
-  border-radius: 12px;
-  width: 100%;
   max-width: 400px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  margin: auto;
-  box-sizing: border-box;
 }
 
-/* Ajustes para diferentes tamaños de pantalla */
-@media (max-width: 480px) {
-  .auth-container {
-    padding: 1rem;
-    align-items: flex-start;
-  }
-
-  .auth-card {
-    padding: 1.5rem;
-  }
-}
-
-/* Ajustes para pantallas más grandes */
-@media (min-width: 768px) {
-  .auth-card {
-    max-width: 380px;
-  }
-}
-
-/* Ajustes de espaciado interno */
-.auth-card h2 {
-  margin: 1rem 0 0.5rem;
-}
-
-.auth-card .auth-subtitle {
-  margin-bottom: 1.5rem;
-}
-
-.form-group {
-  margin-bottom: 1rem;
-}
-
-.social-buttons {
-  margin-top: 1rem;
-}
-
-.auth-links {
-  margin-top: 1rem;
-}
-
-/* Ajustamos el logo para el formulario */
-.auth-card .logo {
+.input-icon {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 40px;
-  margin-bottom: 2rem;
-  text-decoration: none;
-}
-
-.auth-card .logo-icon {
-  color: var(--color-accent);
-  font-size: 2.2em;
-  transform: scaleX(-1);
-  margin-right: 0.8rem;
-  height: 100%;
-  display: flex;
-  align-items: center;
-}
-
-.form-group.checkbox input[type="checkbox"] {
-  accent-color: var(--color-accent);
+  position: relative;
+  flex-wrap: wrap;
+  align-items: stretch;
+  width: 100%;
 }
   

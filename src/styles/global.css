@@ -23,6 +23,13 @@
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
   --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
   --shadow-accent: 0 4px 8px rgba(255, 140, 66, 0.2);
+
+  --bs-primary: var(--color-primary);
+  --bs-secondary: var(--color-accent);
+  --bs-body-bg: #312e2b;
+  --bs-body-color: var(--color-white);
+  --bs-border-radius: 0.5rem;
+  --bs-border-radius-lg: 0.75rem;
 }
 
 * {
@@ -40,8 +47,8 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background-color: var(--color-primary);
-  color: var(--color-white);
+  background-color: var(--bs-body-bg);
+  color: var(--bs-body-color);
   font-family: var(--font-text);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -104,4 +111,19 @@ body {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+.btn-primary {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.btn-outline-primary {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
 }

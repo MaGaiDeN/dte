@@ -124,18 +124,35 @@ const Board: React.FC<BoardProps> = ({ isPuzzle = false, timeControl }) => {
     };
   }, [isPuzzle]);
 
+  function parsePuzzleMove(moveString: string) {
+    // Manejar casos especiales
+    if (moveString.includes('O-O-O')) return { from: 'e1', to: 'c1' }; // Enroque largo
+    if (moveString.includes('O-O')) return { from: 'e1', to: 'g1' };   // Enroque corto
+    
+    return {
+      from: moveString.slice(0, 2) as Square,
+      to: moveString.slice(2, 4) as Square,
+      promotion: moveString.length === 5 ? moveString[4] : undefined
+    };
+  }
+
   function makeAMove(move: any) {
     if (!game || !puzzle) return false;
     
     try {
-      const moveString = move.from + move.to + (move.promotion || '');
-      const expectedMove = puzzle.moves[currentMoveIndex];
+      const gameCopy = new Chess(game.fen());
+      const result = gameCopy.move(move);
       
-      if (moveString === expectedMove) {
-        const gameCopy = new Chess(game.fen());
-        const result = gameCopy.move(move);
+      if (result) {
+        const expectedMove = puzzle.moves[currentMoveIndex];
+        const parsedExpectedMove = parsePuzzleMove(expectedMove);
+        const resultingFen = gameCopy.fen().split(' ')[0]; // Comparar solo posición
         
-        if (result) {
+        const tempGame = new Chess(game.fen());
+        const expectedResult = tempGame.move(parsedExpectedMove);
+        const expectedFen = expectedResult ? tempGame.fen().split(' ')[0] : '';
+        
+        if (resultingFen === expectedFen) {
           setGame(gameCopy);
           
           // Verificar si es el último movimiento del puzzle
@@ -168,9 +185,9 @@ const Board: React.FC<BoardProps> = ({ isPuzzle = false, timeControl }) => {
           }, 500);
           return true;
         }
-      } else {
-        setMessage('Movimiento incorrecto. Intenta de nuevo.');
       }
+      
+      setMessage('Movimiento incorrecto. Intenta de nuevo.');
       return false;
     } catch (error) {
       console.error('Error en makeAMove:', error);
