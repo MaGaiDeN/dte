@@ -6,7 +6,7 @@ interface GameClockProps {
   increment: number;
   isActive: boolean;
   color: 'white' | 'black';
-  onTimeout: () => Promise<void>;
+  onTimeout: () => void;
   onTimeUpdate: (time: number) => void;
   remainingTime: number;
 }

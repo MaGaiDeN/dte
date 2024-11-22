@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Chessboard } from 'react-chessboard';
 import { Chess, Square } from 'chess.js';
-import { doc, updateDoc, onSnapshot, arrayUnion, getDoc, query } from 'firebase/firestore';
+import { doc, updateDoc, onSnapshot, arrayUnion, getDoc, query, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from '../../config/firebase';
 import './Challenge.css';
 import { toast } from 'react-hot-toast';
 import GameClock from '../../components/ChessClock/ChessClock';
 import Header from '../../components/Header/Header';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { playGameStartSound } from '../../utils/sounds';
 
 // Definir la interfaz Challenge aquí ya que no la tenemos importada
 interface Challenge {
@@ -154,19 +155,52 @@ const Challenge = () => {
     // Suscribirse a cambios en tiempo real
     const unsubscribe = onSnapshot(
       doc(db, 'challenges', challengeId),
-      (snapshot) => {
+      async (snapshot) => {
         if (!snapshot.exists()) return;
         const data = snapshot.data();
         
-        setGameStarted(data.gameStarted || false);
+        // Verificar si ambos jugadores están presentes y el juego no ha comenzado
+        const bothPlayersJoined = data.players.white && data.players.black;
+        const gameJustStarted = bothPlayersJoined && !data.gameStarted;
         
-        if (data.timeLeft) {
-          setChallengeState(prev => ({
-            ...prev,
-            timeWhite: data.timeLeft.white,
-            timeBlack: data.timeLeft.black
-          }));
+        if (gameJustStarted) {
+          playGameStartSound();
+          await updateDoc(doc(db, 'challenges', challengeId), {
+            gameStarted: true,
+            startedAt: serverTimestamp()
+          });
         }
+
+        // Actualizar nombres de usuarios
+        if (data.players.white && data.players.white !== challengeState.players.white) {
+          const whiteDoc = await getDoc(doc(db, 'users', data.players.white));
+          if (whiteDoc.exists()) {
+            setChallengeState(prev => ({
+              ...prev,
+              players: {
+                ...prev.players,
+                white: data.players.white,
+                whiteUsername: whiteDoc.data().username
+              }
+            }));
+          }
+        }
+
+        if (data.players.black && data.players.black !== challengeState.players.black) {
+          const blackDoc = await getDoc(doc(db, 'users', data.players.black));
+          if (blackDoc.exists()) {
+            setChallengeState(prev => ({
+              ...prev,
+              players: {
+                ...prev.players,
+                black: data.players.black,
+                blackUsername: blackDoc.data().username
+              }
+            }));
+          }
+        }
+
+        setGameStarted(data.gameStarted || false);
       }
     );
 

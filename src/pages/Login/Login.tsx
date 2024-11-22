@@ -12,7 +12,13 @@ import Header from '../../components/Header/Header';
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const redirectPath = location.state?.redirect || '/lobby';
+  const challengeId = window.location.pathname.split('/challenge/')[1];
+  console.log('URL actual:', window.location.pathname);
+  console.log('ChallengeId extraído:', challengeId);
+  
+  const redirectPath = challengeId ? `/challenge/${challengeId}` : (location.state?.redirect || '/lobby');
+  console.log('Ruta de redirección:', redirectPath);
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -39,23 +45,26 @@ const Login = () => {
   const handleGoogleLogin = async () => {
     const provider = new GoogleAuthProvider();
     try {
+      console.log('Iniciando login con Google...');
       const result = await signInWithPopup(auth, provider);
       
-      // Verificar si el usuario ya existe en Firestore
       const userDoc = await getDoc(doc(db, 'users', result.user.uid));
+      console.log('Usuario existe en Firestore:', userDoc.exists());
       
       if (!userDoc.exists()) {
-        // Si es nuevo usuario, redirigir a la página de selección de username
+        console.log('Redirigiendo a complete-profile con redirectTo:', redirectPath);
         navigate('/complete-profile', { 
           state: { 
             uid: result.user.uid,
             email: result.user.email,
-            photoURL: result.user.photoURL
+            photoURL: result.user.photoURL,
+            redirectTo: redirectPath
           } 
         });
         return;
       }
       
+      console.log('Redirigiendo a:', redirectPath);
       navigate(redirectPath);
     } catch (error: any) {
       console.error('Error con Google login:', error);

@@ -203,7 +203,9 @@ const Board: React.FC<BoardProps> = ({ isPuzzle = false, timeControl }) => {
           increment={timeControl.increment}
           isActive={currentTurn === 'black'}
           color="black"
-          onTimeout={() => {/* manejar timeout */}}
+          onTimeout={async () => {/* manejar timeout */}}
+          onTimeUpdate={(time) => {/* manejar actualización de tiempo */}}
+          remainingTime={timeControl.time * 60} // tiempo inicial en segundos
         />
       )}
 
@@ -233,7 +235,9 @@ const Board: React.FC<BoardProps> = ({ isPuzzle = false, timeControl }) => {
           increment={timeControl.increment}
           isActive={currentTurn === 'white'}
           color="white"
-          onTimeout={() => {/* manejar timeout */}}
+          onTimeout={async () => {/* manejar timeout */}}
+          onTimeUpdate={(time) => {/* manejar actualización de tiempo */}}
+          remainingTime={timeControl.time * 60} // tiempo inicial en segundos
         />
       )}
 

@@ -1,38 +1,34 @@
-// @ts-ignore
-import { useState, useEffect } from 'react';
-import { MatchConfig, TIME_CONTROL_OPTIONS } from '../../components/MatchSettings/types/match';
-import TimeControl from '../../components/TimeControl/TimeControl';
-import MatchSettings from '../../components/MatchSettings/MatchSettings';
-import './Lobby.css';
-import { auth } from '../../config/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { signOut } from 'firebase/auth';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
-import { db } from '../../config/firebase';
+import { doc, updateDoc, getDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
+import { db, auth } from '../../config/firebase';
 import { toast } from 'react-hot-toast';
-import { getDoc, doc } from 'firebase/firestore';
-import Header from '../../components/Header/Header';
+import { MatchConfig, TIME_CONTROL_OPTIONS } from '../../components/MatchSettings/types/match';
+import MatchSettings from '../../components/MatchSettings/MatchSettings';
+import GameCount from '../../components/MatchSettings/GameCount';
+import './Lobby.css';
+import { User } from 'firebase/auth';
+import TimeControl from '../../components/TimeControl/TimeControl';
 
+interface LobbyProps {
+  challengeId?: string;
+  challenge?: any;
+}
 
-const Lobby = () => {
-  console.log('Renderizando Lobby');
-  
+const Lobby = ({ challengeId, challenge }: LobbyProps) => {
   const navigate = useNavigate();
-  const [userData, setUserData] = useState<{username: string} | null>(null);
+  const [userData, setUserData] = useState<{ username: string } | null>(null);
+  const [matchConfig, setMatchConfig] = useState<MatchConfig>({
+    timeControl: TIME_CONTROL_OPTIONS.find(opt => opt.time === 3 && opt.increment === 2) || TIME_CONTROL_OPTIONS[0],
+    numberOfGames: 3,
+    rated: true,
+    color: 'random'
+  });
 
   useEffect(() => {
-    console.log('Componentes importados:', {
-      TimeControl: !!TimeControl,
-      MatchSettings: !!MatchSettings,
-      Header: !!Header
-    });
-
-    console.log('Iniciando efecto de autenticación en Lobby');
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      console.log('Estado de autenticación cambiado:', !!user);
+    const unsubscribe = onAuthStateChanged(auth, (user: User | null) => {
       if (!user) {
-        console.log('Usuario no autenticado, redirigiendo a login');
         navigate('/login');
       }
     });
@@ -48,29 +44,14 @@ const Lobby = () => {
     
     fetchUserData();
 
-    return () => {
-      console.log('Limpiando efecto de autenticación en Lobby');
-      unsubscribe();
-    };
+    return () => unsubscribe();
   }, [navigate]);
-
-  const [matchConfig, setMatchConfig] = useState<MatchConfig>({
-    timeControl: TIME_CONTROL_OPTIONS.find(opt => opt.time === 3 && opt.increment === 2) || TIME_CONTROL_OPTIONS[0],
-    numberOfGames: 3,
-    rated: true,
-    color: 'random'
-  });
 
   const handleCreateChallenge = async () => {
     try {
-      if (!auth.currentUser) {
+      if (!auth.currentUser || !userData?.username) {
         toast.error('Debes iniciar sesión para crear un reto');
         navigate('/login');
-        return;
-      }
-
-      if (!userData?.username) {
-        toast.error('Error: No se pudo obtener la información del usuario');
         return;
       }
 
@@ -96,89 +77,58 @@ const Lobby = () => {
         fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
       };
 
-      console.log('Intentando crear reto con datos:', challengeData);
-
       const challengeRef = await addDoc(collection(db, 'challenges'), challengeData);
-      
-      if (!challengeRef.id) {
-        throw new Error('No se pudo obtener el ID del reto');
-      }
-      
       toast.success('¡Reto creado!');
       navigate(`/challenge/${challengeRef.id}`);
       
     } catch (error: any) {
       console.error('Error al crear reto:', error);
-      if (error.code === 'resource-exhausted') {
-        toast.error('Se ha excedido el límite de operaciones. Intenta más tarde.');
-      } else {
-        toast.error('Error al crear el reto');
-      }
+      toast.error('Error al crear el reto');
     }
   };
 
-  const handleLogout = async () => {
+  const joinGame = async () => {
+    if (!challengeId || !auth.currentUser) return;
+
     try {
-      await signOut(auth);
-      navigate('/');
+      const availableColor = !challenge?.players.white ? 'white' : 'black';
+      await updateDoc(doc(db, 'challenges', challengeId), {
+        [`players.${availableColor}`]: auth.currentUser.uid
+      });
+      navigate(`/challenge/${challengeId}`);
     } catch (error) {
-      console.error('Error al cerrar sesión:', error);
+      toast.error('Error al unirse al juego');
     }
   };
 
-  const handleConfigChange = (newConfig: MatchConfig) => {
-    setMatchConfig(newConfig);
-  };
+  useEffect(() => {
+    if (challenge && (!challenge.players.white || !challenge.players.black)) {
+      joinGame();
+    }
+  }, [challenge, challengeId]);
 
   return (
     <div className="lobby-container">
-      <Header />
-      <div className="lobby-content">
-        <div className="lobby-card">
-          <h2>Crear Match Personalizado</h2>
-          <button onClick={handleLogout}>Cerrar Sesión</button>
-          
+      {challengeId ? (
+        <div className="waiting-screen">
+          <h2>Esperando jugadores...</h2>
+          <div className="spinner"></div>
+        </div>
+      ) : (
+        <div className="create-challenge">
+          <h2>Crear nuevo reto</h2>
           <TimeControl
             options={TIME_CONTROL_OPTIONS}
             selected={matchConfig.timeControl}
-            onSelect={(timeControl) => setMatchConfig({...matchConfig, timeControl})}
+            onSelect={(option) => setMatchConfig({...matchConfig, timeControl: option})}
           />
-
-          <div className="game-count-section">
-            <h3>Número de Partidas</h3>
-            <div className="game-count-options">
-              {[1, 3, 5, 10, 20].map((count) => (
-                <button
-                  key={count}
-                  className={`game-count-button ${matchConfig.numberOfGames === count ? 'active' : ''}`}
-                  onClick={() => setMatchConfig({...matchConfig, numberOfGames: count})}
-                >
-                  {count === 1 ? '1 partida' : `${count} partidas`}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <MatchSettings
-            config={matchConfig}
-            onChange={handleConfigChange}
-          />
-
-          <button 
-            className="btn-create-challenge"
-            onClick={handleCreateChallenge}
-          >
+          <MatchSettings config={matchConfig} onChange={setMatchConfig} />
+          <GameCount selectedCount={matchConfig.numberOfGames} onChange={(count) => setMatchConfig({...matchConfig, numberOfGames: count})} />
+          <button className="create-button" onClick={handleCreateChallenge}>
             Crear Reto
           </button>
         </div>
-      </div>
-
-      <div className="lobby-footer">
-        <button className="btn-puzzles">
-          <i className="fas fa-puzzle-piece"></i>
-          Resolver puzzles
-        </button>
-      </div>
+      )}
     </div>
   );
 };
