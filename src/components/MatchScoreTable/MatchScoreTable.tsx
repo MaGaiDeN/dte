@@ -10,76 +10,80 @@ interface MatchScoreTableProps {
 }
 
 const MatchScoreTable = ({ whitePlayer, blackPlayer, numberOfGames, results = [], currentGame }: MatchScoreTableProps) => {
-  // Memoizar los resultados para evitar recálculos innecesarios
   const scores = React.useMemo(() => {
-    // Crear una copia del array para evitar mutaciones
     const validResults = [...results].filter(result => result !== null);
     
     const whiteScore = validResults.reduce((total, result) => {
       if (!result) return total;
       if (result === '1-0') return total + 1;
-      if (result === '½-½') return total + 0.5;
       if (result === '0-1') return total + 0;
+      if (result === '½-½') return total + 0.5;
       return total;
     }, 0);
 
     const blackScore = validResults.reduce((total, result) => {
       if (!result) return total;
       if (result === '0-1') return total + 1;
-      if (result === '½-½') return total + 0.5;
       if (result === '1-0') return total + 0;
+      if (result === '½-½') return total + 0.5;
       return total;
     }, 0);
 
-    // Forzar el número a tener un decimal fijo
     return { 
       whiteScore: Number(whiteScore.toFixed(1)), 
       blackScore: Number(blackScore.toFixed(1))
     };
-  }, [results]); // Dependencia única en results
+  }, [results]);
 
-  // Evitar re-renders innecesarios memorizando el componente completo
-  return React.useMemo(() => (
-    <div className="match-score-table">
-      <table>
+  return (
+    <div className="table-responsive">
+      <table className="table table-dark table-bordered align-middle">
         <thead>
           <tr>
-            <th className="player-column">Jugador</th>
-            {Array.from({ length: numberOfGames }, (_, i) => (
-              <th key={i} className={`game-column ${i + 1 === currentGame ? 'current' : ''}`}>
-                {i + 1}
+            <th scope="col">Jugador</th>
+            {Array(numberOfGames).fill(null).map((_, index) => (
+              <th key={index} scope="col" className="text-center">
+                {index + 1}
               </th>
             ))}
-            <th className="total-column">Total</th>
+            <th scope="col" className="text-center">Total</th>
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td className="player-column">{whitePlayer || 'Blancas'}</td>
-            {Array.from({ length: numberOfGames }, (_, i) => (
-              <td key={i} className={`game-column ${i + 1 === currentGame ? 'current' : ''}`}>
-                {results[i] === '1-0' ? '1' : 
-                 results[i] === '0-1' ? '0' : 
-                 results[i] === '½-½' ? '½' : '-'}
+          <tr className={currentGame % 2 === 1 ? 'table-active' : ''}>
+            <th scope="row" className="text-white">
+              <i className="fas fa-chess-king text-white me-2"></i>
+              {whitePlayer}
+            </th>
+            {Array(numberOfGames).fill(null).map((_, index) => (
+              <td key={index} className={`text-center ${index + 1 === currentGame ? 'current-game' : ''}`}>
+                {results[index] ? 
+                  (results[index] === '1-0' ? '1' : 
+                   results[index] === '0-1' ? '0' : 
+                   '½') : '-'}
               </td>
             ))}
-            <td className="total-column">{scores.whiteScore.toFixed(1)}</td>
+            <td className="text-center fw-bold">{scores.whiteScore}</td>
           </tr>
-          <tr>
-            <td className="player-column">{blackPlayer || 'Negras'}</td>
-            {Array.from({ length: numberOfGames }, (_, i) => (
-              <td key={i} className={`game-column ${i + 1 === currentGame ? 'current' : ''}`}>
-                {results[i] === '0-1' ? '1' : 
-                 results[i] === '1-0' ? '0' : 
-                 results[i] === '½-½' ? '½' : '-'}
+          <tr className={currentGame % 2 === 0 ? 'table-active' : ''}>
+            <th scope="row" className="text-white">
+              <i className="fas fa-chess-king text-secondary me-2"></i>
+              {blackPlayer}
+            </th>
+            {Array(numberOfGames).fill(null).map((_, index) => (
+              <td key={index} className={`text-center ${index + 1 === currentGame ? 'current-game' : ''}`}>
+                {results[index] ? 
+                  (results[index] === '0-1' ? '1' : 
+                   results[index] === '1-0' ? '0' : 
+                   '½') : '-'}
               </td>
             ))}
-            <td className="total-column">{scores.blackScore.toFixed(1)}</td>
+            <td className="text-center fw-bold">{scores.blackScore}</td>
           </tr>
         </tbody>
       </table>
     </div>
-  ), [whitePlayer, blackPlayer, numberOfGames, results, currentGame, scores]);
+  );
 };
 
-export default MatchScoreTable; 
+export default React.memo(MatchScoreTable); 

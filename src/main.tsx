@@ -7,12 +7,19 @@ import './styles/components.css'
 import './index.css'
 import App from './App'
 
-console.log('Iniciando aplicación')
 const rootElement = document.getElementById('root')
-console.log('Elemento root encontrado:', rootElement)
 
-createRoot(rootElement!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)
+if (!rootElement) {
+  throw new Error('No se encontró el elemento root en el DOM')
+}
+
+try {
+  createRoot(rootElement).render(
+    <StrictMode>
+      <App />
+    </StrictMode>
+  )
+  console.log('Aplicación iniciada correctamente')
+} catch (error) {
+  console.error('Error al iniciar la aplicación:', error)
+}

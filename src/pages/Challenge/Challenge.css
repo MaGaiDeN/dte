@@ -56,6 +56,8 @@
 }
 
 .game-actions {
+  display: flex;
+  gap: 1rem;
   margin-top: 1rem;
 }
 
@@ -175,4 +177,83 @@
 .game-controls button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.player-box.black {
+  background: var(--color-accent);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Asegurarnos que el texto sea legible sobre el fondo naranja */
+.player-box.black .player-name {
+  color: var(--color-text);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.player-box.black .player-rating {
+  color: var(--color-text);
+  opacity: 0.9;
+}
+
+/* Si hay otros elementos dentro del player-box que necesiten ajuste de color */
+.player-box.black i,
+.player-box.black span {
+  color: var(--color-text);
+}
+
+/* Contenedor de botones de acción */
+.game-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+/* Estilo base para los botones de acción */
+.action-button {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: none;
+  cursor: pointer;
+}
+
+/* Botón de rendición */
+.resign-button {
+  background-color: var(--color-accent);
+  color: var(--color-text);
+  box-shadow: 0 2px 4px rgba(255, 140, 66, 0.2);
+}
+
+.resign-button:hover {
+  background-color: #ff7a29;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(255, 140, 66, 0.3);
+}
+
+/* Botón de tablas */
+.draw-button {
+  background-color: var(--color-bg-light);
+  color: var(--color-text);
+  border: 2px solid var(--color-accent);
+}
+
+.draw-button:hover {
+  background-color: var(--color-accent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(255, 140, 66, 0.3);
+}
+
+/* Estado deshabilitado */
+.action-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 } 

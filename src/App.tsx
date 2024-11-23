@@ -19,6 +19,10 @@ import { AuthProvider } from './context/AuthContext';
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const [authState, setAuthState] = useState<'loading' | 'authenticated' | 'unauthenticated'>('loading');
   const location = useLocation();
+  
+  // Extraer challengeId si existe en la URL
+  const challengeId = window.location.href.match(/challenge\/([^/]+)/)?.[1];
+  const loginPath = challengeId ? `/login?challenge=${challengeId}` : '/login';
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -33,7 +37,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (authState === 'unauthenticated') {
-    return <Navigate to="/login" state={{ redirect: location.pathname }} replace />;
+    return <Navigate to={loginPath} state={{ redirect: location.pathname }} replace />;
   }
 
   return <>{children}</>;
@@ -42,7 +46,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <BrowserRouter basename="/chess_match">
         <div className="app-container">
           <Routes>
             <Route index element={<Home />} />

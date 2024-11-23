@@ -13,8 +13,8 @@ import { playGameStartSound } from '../../utils/sounds';
 import MatchScoreTable from '../../components/MatchScoreTable/MatchScoreTable';
 import GameOverModal from '../../components/GameOverModal/GameOverModal';
 
-// Definir la interfaz Challenge aquí ya que no la tenemos importada
-interface Challenge {
+// Renombrar la interfaz para evitar conflictos
+interface ChallengeType {
   id: string;
   createdBy: string;
   creatorId: string;
@@ -53,7 +53,7 @@ interface ChallengeState {
   timeBlack: number;
   currentGame: number;
   totalGames: number;
-  challenge?: Challenge | null;
+  challenge?: ChallengeType | null;
   isWhiteTurn: boolean;
   isLoading: boolean;
   error: string | null;
@@ -138,7 +138,7 @@ const Challenge = () => {
           challenge: {
             id: challengeId,
             ...data
-          } as Challenge,
+          } as ChallengeType,
           timeWhite: timeInSeconds,
           timeBlack: timeInSeconds,
           isLoading: false,
@@ -348,9 +348,11 @@ const Challenge = () => {
       const data = docSnapshot.data();
       if (!data) return;
 
+      // Verificar si ambos jugadores están listos
       if (data.readyForNextGame?.white && data.readyForNextGame?.black) {
         const newGame = new Chess();
         setGame(newGame);
+        setShowGameOverModal(false); // Cerrar el modal para ambos jugadores
         
         await updateDoc(docSnapshot.ref, {
           fen: newGame.fen(),
@@ -365,11 +367,8 @@ const Challenge = () => {
         });
 
         setGameResult(null);
-        setShowGameOverModal(false);
         setDrawOffered(null);
         setGameStarted(true);
-        
-        // Asegurar que el turno está correctamente establecido
         setIsPlayerTurn(playerColor === 'white');
       }
     });
@@ -426,7 +425,7 @@ const Challenge = () => {
             ...prevState.challenge!,
             id: challengeId,
             ...data,
-          } as Challenge,
+          } as ChallengeType,
           currentGame: data.currentGame || 1,
           results: data.results || []
         };
@@ -550,17 +549,28 @@ const Challenge = () => {
   const handleTimeUpdate = async (color: 'white' | 'black', time: number) => {
     if (!challengeId || !gameStarted) return;
     
-    setChallengeState(prev => ({
-      ...prev,
-      [`time${color.charAt(0).toUpperCase() + color.slice(1)}`]: time
-    }));
+    // Solo actualizar si es el turno del jugador correspondiente
+    const isCorrectTurn = (game.turn() === 'w' && color === 'white') || 
+                         (game.turn() === 'b' && color === 'black');
+                         
+    if (!isCorrectTurn) return;
 
-    try {
-      await updateDoc(doc(db, 'challenges', challengeId), {
-        [`timeLeft.${color}`]: time
-      });
-    } catch (error) {
-      console.error('Error updating time:', error);
+    // Actualizar estado local solo si el tiempo ha cambiado significativamente (por ejemplo, cada segundo)
+    const timeKey = `time${color.charAt(0).toUpperCase() + color.slice(1)}` as keyof ChallengeState;
+    const currentTime = (challengeState[timeKey] as number) || 0;
+    if (Math.abs(currentTime - time) >= 1000) {
+      setChallengeState(prev => ({
+        ...prev,
+        [timeKey]: time
+      }));
+
+      try {
+        await updateDoc(doc(db, 'challenges', challengeId), {
+          [`timeLeft.${color}`]: time
+        });
+      } catch (error) {
+        console.error('Error updating time:', error);
+      }
     }
   };
 
@@ -609,17 +619,28 @@ const Challenge = () => {
     }
   };
 
+  const handlePieceDrop = (sourceSquare: Square, targetSquare: Square, _piece: string): boolean => {
+    if (!challengeState.players.black || !challengeState.players.white) {
+      toast.error('Esperando al oponente para comenzar');
+      return false;
+    }
+    return makeMove(sourceSquare, targetSquare);
+  };
+
   const handleSquareClick = (square: Square) => {
+    if (!challengeState.players.black || !challengeState.players.white) {
+      toast.error('Esperando al oponente para comenzar');
+      return;
+    }
+
     if (!isPlayerTurn) return;
 
     if (selectedSquare === null) {
-      // Primera casilla seleccionada
       const piece = game.get(square);
       if (piece && piece.color === (playerColor === 'white' ? 'w' : 'b')) {
         setSelectedSquare(square);
       }
     } else {
-      // Segunda casilla seleccionada
       if (square === selectedSquare) {
         setSelectedSquare(null);
       } else {
@@ -628,11 +649,6 @@ const Challenge = () => {
         return moveResult;
       }
     }
-  };
-
-  // Crear un adaptador para onPieceDrop
-  const handlePieceDrop = (sourceSquare: Square, targetSquare: Square, _piece: string): boolean => {
-    return makeMove(sourceSquare, targetSquare);
   };
 
   return (
@@ -805,40 +821,45 @@ const Challenge = () => {
                   currentGame={challengeState.currentGame}
                 />
                 
-                {/* Añadir botones de control */}
+                {/* Panel derecho - Botones de control */}
                 <div className="game-controls mt-4">
                   {drawOffered && drawOffered !== auth.currentUser?.uid ? (
-                    <div className="draw-offer-buttons">
+                    <div className="game-actions">
                       <button 
-                        className="btn btn-success me-2" 
+                        className="action-button draw-button"
                         onClick={() => handleDrawResponse(true)}
                       >
+                        <i className="fas fa-handshake"></i>
                         Aceptar tablas
                       </button>
                       <button 
-                        className="btn btn-danger" 
+                        className="action-button resign-button"
                         onClick={() => handleDrawResponse(false)}
                       >
+                        <i className="fas fa-times"></i>
                         Rechazar tablas
                       </button>
                     </div>
                   ) : (
-                    <button 
-                      className="btn btn-warning me-2" 
-                      onClick={() => handleDrawOffer()}
-                      disabled={!gameStarted || !!drawOffered}
-                    >
-                      {drawOffered === auth.currentUser?.uid ? 'Tablas ofrecidas' : 'Ofrecer Tablas'}
-                    </button>
+                    <div className="game-actions">
+                      <button 
+                        className="action-button draw-button"
+                        onClick={() => handleDrawOffer()}
+                        disabled={!gameStarted || !!drawOffered}
+                      >
+                        <i className="fas fa-handshake"></i>
+                        {drawOffered === auth.currentUser?.uid ? 'Tablas ofrecidas' : 'Ofrecer Tablas'}
+                      </button>
+                      <button 
+                        className="action-button resign-button"
+                        onClick={() => handleResign()}
+                        disabled={!gameStarted}
+                      >
+                        <i className="fas fa-flag"></i>
+                        Abandonar
+                      </button>
+                    </div>
                   )}
-                  
-                  <button 
-                    className="btn btn-danger" 
-                    onClick={() => handleResign()}
-                    disabled={!gameStarted}
-                  >
-                    Abandonar
-                  </button>
                 </div>
               </div>
             </div>

@@ -25,25 +25,23 @@ const GameClock = ({
 
   useEffect(() => {
     setTime(remainingTime || timeInMinutes * 60);
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
   }, [remainingTime, timeInMinutes]);
 
   useEffect(() => {
     if (isActive && time > 0) {
       timerRef.current = setInterval(() => {
         setTime(prevTime => {
-          const newTime = prevTime - 1;
+          const newTime = Math.max(0, prevTime - 1);
           onTimeUpdate(newTime);
           return newTime;
         });
       }, 1000);
-    } else if (!isActive && timerRef.current) {
-      clearInterval(timerRef.current);
-      if (increment > 0 && time > 0) {
-        setTime(prevTime => {
-          const newTime = prevTime + increment;
-          onTimeUpdate(newTime);
-          return newTime;
-        });
+    } else {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
       }
     }
 
@@ -52,7 +50,7 @@ const GameClock = ({
         clearInterval(timerRef.current);
       }
     };
-  }, [isActive, increment]);
+  }, [isActive, time, onTimeUpdate]);
 
   useEffect(() => {
     if (time <= 0) {

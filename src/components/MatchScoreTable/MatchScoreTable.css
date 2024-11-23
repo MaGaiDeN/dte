@@ -1,53 +1,46 @@
-.match-score-table {
-  background: var(--color-bg-light);
+.table {
+  background-color: var(--color-bg-light);
   border-radius: 8px;
-  padding: 1rem;
-  overflow-x: auto;
-}
-
-.match-score-table table {
-  width: 100%;
-  border-collapse: collapse;
-  font-family: 'Roboto Mono', monospace;
-}
-
-.match-score-table th,
-.match-score-table td {
-  padding: 0.75rem;
-  text-align: center;
-  border: 1px solid #3a3734;
-}
-
-.match-score-table th {
-  background-color: #2a2724;
-  color: var(--color-accent);
-  font-weight: 600;
-}
-
-.player-column {
-  text-align: left;
-  padding-left: 1rem;
-  min-width: 120px;
-  white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
+  margin-bottom: 0;
 }
 
-.game-column {
-  min-width: 40px;
+.table th,
+.table td {
+  border-color: var(--color-bg-dark);
+  padding: 0.75rem;
+  vertical-align: middle;
 }
 
-.game-column.current {
-  background-color: var(--color-accent);
-  color: white;
-}
-
-.total-column {
-  font-weight: 600;
+.table thead th {
+  background-color: var(--color-bg-dark);
   color: var(--color-accent);
-  min-width: 60px;
+  font-weight: 600;
+  border-bottom: 2px solid var(--color-accent);
 }
 
-.match-score-table tr:hover {
-  background-color: #2a2724;
+.current-game {
+  background-color: rgba(255, 140, 66, 0.1);
+  font-weight: bold;
+  color: var(--color-accent) !important;
+}
+
+.table-active {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.table th[scope="row"] {
+  background-color: var(--color-bg-dark);
+}
+
+.table td {
+  transition: all 0.2s ease;
+}
+
+.table td:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.fw-bold {
+  color: var(--color-accent);
 } 

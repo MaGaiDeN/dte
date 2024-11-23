@@ -1,7 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, connectAuthEmulator } from "firebase/auth";
 import { getFirestore, initializeFirestore, enableIndexedDbPersistence, connectFirestoreEmulator } from "firebase/firestore";
-import { getAnalytics } from "firebase/analytics";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDcGX1V06Iox4rkwOm9BW2gfC1-jj8TiSs",
@@ -13,22 +12,31 @@ const firebaseConfig = {
   measurementId: "G-2V8DL9QX5J"
 };
 
+// Inicializar antes de cualquier otra operación
 const app = initializeApp(firebaseConfig);
+
+// Configurar Auth primero
 export const auth = getAuth(app);
+connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+
+// Configurar Firestore después
 const db = initializeFirestore(app, {
-  cacheSizeBytes: 5242880,
   experimentalForceLongPolling: true,
 });
+connectFirestoreEmulator(db, 'localhost', 9090);
 
-if (process.env.NODE_ENV === 'development') {
-  connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
-  connectFirestoreEmulator(db, 'localhost', 8080);
-}
+console.log('🔧 Usando emuladores - Auth: 9099, Firestore: 9090');
 
-export const analytics = getAnalytics(app);
-
+// Habilitar persistencia después de conectar al emulador
 enableIndexedDbPersistence(db).catch((err) => {
-  console.error('Error enabling persistence:', err);
+  if (err.code === 'failed-precondition') {
+    console.warn('La persistencia falló: múltiples pestañas abiertas');
+  } else if (err.code === 'unimplemented') {
+    console.warn('El navegador no soporta persistencia');
+  }
 });
+
+// Eliminar analytics para desarrollo local
+// export const analytics = getAnalytics(app);
 
 export { db };

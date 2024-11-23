@@ -13,11 +13,13 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Extraer challengeId de la URL si existe
-  const challengeId = window.location.pathname.split('/challenge/')[1];
+  // Extraer challengeId de la URL completa
+  const challengeId = window.location.href.match(/challenge\/([^/]+)/)?.[1];
   
   // Definir la ruta de redirección
-  const redirectPath = challengeId ? `/challenge/${challengeId}` : (location.state?.redirect || '/lobby');
+  const redirectPath = challengeId 
+    ? `/challenge/${challengeId}` 
+    : (location.state?.redirect || '/lobby');
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

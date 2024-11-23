@@ -9,7 +9,6 @@ import MatchSettings from '../../components/MatchSettings/MatchSettings';
 import GameCount from '../../components/MatchSettings/GameCount';
 import './Lobby.css';
 import { User } from 'firebase/auth';
-import TimeControl from '../../components/TimeControl/TimeControl';
 
 interface LobbyProps {
   challengeId?: string;
@@ -117,13 +116,11 @@ const Lobby = ({ challengeId, challenge }: LobbyProps) => {
       ) : (
         <div className="create-challenge">
           <h2>Crear nuevo reto</h2>
-          <TimeControl
-            selectedOption={matchConfig.timeControl}
-            options={TIME_CONTROL_OPTIONS}
-            onChange={(option) => setMatchConfig({...matchConfig, timeControl: option})}
-          />
           <MatchSettings config={matchConfig} onChange={setMatchConfig} />
-          <GameCount selectedCount={matchConfig.numberOfGames} onChange={(count) => setMatchConfig({...matchConfig, numberOfGames: count})} />
+          <GameCount 
+            selectedCount={matchConfig.numberOfGames} 
+            onChange={(count) => setMatchConfig({...matchConfig, numberOfGames: count})} 
+          />
           <button className="create-button" onClick={handleCreateChallenge}>
             Crear Reto
           </button>
