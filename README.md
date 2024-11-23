@@ -1,50 +1,96 @@
-# React + TypeScript + Vite
+# ♟️ ChessMatch
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+ChessMatch es una plataforma moderna de ajedrez online que permite jugar partidas con control de tiempo contra otros jugadores.
 
-Currently, two official plugins are available:
+## 🚀 Características
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Match System**: Sistema de partidas múltiples con puntuación
+- **Control de Tiempo**: Relojes de ajedrez configurables
+- **Ofertas de Tablas**: Sistema de propuestas y aceptación de tablas
+- **Rotación de Tablero**: Vista adaptada según el color que juegas
+- **Diseño Responsive**: Interfaz adaptable a cualquier dispositivo
+- **Autenticación**: Sistema de login y registro de usuarios
 
-## Expanding the ESLint configuration
+## 🛠️ Tecnologías
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+- **Frontend**:
+  - React 18
+  - TypeScript
+  - Bootstrap 5
+  - Chess.js
+  - React Chessboard
+  - React Router
+  - React Hot Toast
 
-- Configure the top-level `parserOptions` property like this:
+- **Backend**:
+  - Firebase
+  - Firestore
+  - Firebase Auth
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+## 🎨 Diseño
+
+- **Paleta de Colores**:
+  - Naranja (#FF8C42): Color de acento
+  - Negro (#1E1E1E): Fondo principal
+  - Blanco (#FFFFFF): Texto principal
+  - Gris oscuro (#2D2D2D): Elementos secundarios
+
+## 🚦 Inicio Rápido
+
+1. **Clona el repositorio**: 
+
+git clone https://github.com/MaGaiDeN/chess_match.git
+
+
+2. **Instala las dependencias**:
+
+```bash
+cd chess_match
+npm install
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+3. **Configura Firebase**:
+- Crea un proyecto en Firebase
+- Copia las credenciales en `.env`
+- Habilita Authentication y Firestore
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+4. **Inicia el servidor de desarrollo**:
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+```bash
+npm run dev
 ```
+
+## 🎮 Funcionalidades
+
+- **Sistema de Match**:
+  - Configuración de número de partidas
+  - Control de tiempo personalizable
+  - Puntuación automática
+  - Rotación de colores
+
+- **Control de Tiempo**:
+  - Tiempo principal configurable
+  - Sistema de incremento
+  - Alertas visuales de tiempo bajo
+
+- **Interacción**:
+  - Ofertas de tablas
+  - Opción de abandono
+  - Detección automática de fin de partida
+
+## 🔜 Próximas Características
+
+- [ ] Sistema de ELO
+- [ ] Chat en partida
+- [ ] Análisis post-partida
+- [ ] Historial de partidas
+- [ ] Modo espectador
+
+## 📄 Licencia
+
+Este proyecto está bajo la Licencia MIT.
+
+---
+<p align="center">
+  Desarrollado por MaGaiDeN <3
+</p>
