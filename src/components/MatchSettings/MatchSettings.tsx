@@ -1,4 +1,4 @@
-import TimeControl from './TimeControl';
+import TimeControl from '../TimeControl/TimeControl';
 import GameCount from './GameCount';
 import { MatchConfig, TIME_CONTROL_OPTIONS } from './types/match';
 import './MatchSettings.css';

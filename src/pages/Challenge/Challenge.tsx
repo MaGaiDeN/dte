@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Chessboard } from 'react-chessboard';
-import { Chess, Square } from 'chess.js';
-import { doc, updateDoc, onSnapshot, arrayUnion, getDoc, query, serverTimestamp } from 'firebase/firestore';
+import { Chess, Square, Piece } from 'chess.js';
+import { doc, updateDoc, onSnapshot, arrayUnion, getDoc, query, serverTimestamp, setDoc, deleteDoc, collection, increment } from 'firebase/firestore';
 import { db, auth } from '../../config/firebase';
 import './Challenge.css';
 import { toast } from 'react-hot-toast';
@@ -11,6 +11,7 @@ import Header from '../../components/Header/Header';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { playGameStartSound } from '../../utils/sounds';
 import MatchScoreTable from '../../components/MatchScoreTable/MatchScoreTable';
+import GameOverModal from '../../components/GameOverModal/GameOverModal';
 
 // Definir la interfaz Challenge aquí ya que no la tenemos importada
 interface Challenge {
@@ -39,6 +40,10 @@ interface Challenge {
   whiteScore?: number;
   blackScore?: number;
   results?: Array<'1-0' | '0-1' | '½-½' | null>;
+  readyForNextGame?: {
+    white?: boolean;
+    black?: boolean;
+  };
 }
 
 interface ChallengeState {
@@ -58,6 +63,8 @@ interface ChallengeState {
     whiteUsername: string | null;
     blackUsername: string | null;
   };
+  results: Array<'1-0' | '0-1' | '½-½' | null>;
+  gameFinished: boolean;
 }
 
 const Challenge = () => {
@@ -84,7 +91,9 @@ const Challenge = () => {
       black: null,
       whiteUsername: null,
       blackUsername: null
-    }
+    },
+    results: [],
+    gameFinished: false
   });
 
   const { challengeId } = useParams();
@@ -93,6 +102,12 @@ const Challenge = () => {
   // Añade estos estados
   const [gameStarted, setGameStarted] = useState(false);
   const [initialTime, setInitialTime] = useState<number>(0);
+  const [showGameOverModal, setShowGameOverModal] = useState(false);
+  const [gameResult, setGameResult] = useState<'1-0' | '0-1' | '½-½' | null>(null);
+  const [gameEndReason, setGameEndReason] = useState<'checkmate' | 'timeout' | 'draw' | null>(null);
+  const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
+  const [readyForNextGame, setReadyForNextGame] = useState<{[key: string]: boolean}>({});
+  const [drawOffered, setDrawOffered] = useState<string | null>(null);
 
   // Efecto para cargar el reto inicial
   useEffect(() => {
@@ -284,22 +299,27 @@ const Challenge = () => {
       if (!data) return;
 
       // Actualizar el estado del juego
-      const newGame = new Chess(data.fen || game.fen());
+      const newGame = new Chess(data.fen || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
       setGame(newGame);
       
-      // Actualizar el turno del jugador
-      const isCurrentPlayerTurn = 
-        (playerColor === 'white' && newGame.turn() === 'w') ||
-        (playerColor === 'black' && newGame.turn() === 'b');
+      // Actualizar oferta de tablas
+      if (data.drawOffer) {
+        setDrawOffered(data.drawOffer.offeredBy);
+      } else {
+        setDrawOffered(null);
+      }
+
+      // Verificar si el juego ha terminado por abandono
+      if (data.status === 'completed' && data.endReason === 'resignation') {
+        const result = data.winner === 'white' ? '1-0' : '0-1';
+        setGameResult(result);
+        setShowGameOverModal(true);
+        toast.success(`${data.winner === playerColor ? '¡Has ganado!' : 'Tu oponente ha abandonado'}`);
+      }
       
+      // Corregir la lógica del turno
+      const isCurrentPlayerTurn = playerColor === (newGame.turn() === 'w' ? 'white' : 'black');
       setIsPlayerTurn(isCurrentPlayerTurn);
-      
-      console.log('Estado actualizado:', {
-        fen: data.fen,
-        playerColor,
-        isCurrentPlayerTurn,
-        turn: newGame.turn()
-      });
     });
 
     return () => unsubscribe();
@@ -321,48 +341,144 @@ const Challenge = () => {
     });
   }, [challengeState.challenge]);
 
+  useEffect(() => {
+    if (!challengeId) return;
+
+    const unsubscribe = onSnapshot(doc(db, 'challenges', challengeId), async (docSnapshot) => {
+      const data = docSnapshot.data();
+      if (!data) return;
+
+      if (data.readyForNextGame?.white && data.readyForNextGame?.black) {
+        const newGame = new Chess();
+        setGame(newGame);
+        
+        await updateDoc(docSnapshot.ref, {
+          fen: newGame.fen(),
+          status: 'active',
+          drawOffer: null,
+          readyForNextGame: null,
+          currentGame: (data.currentGame || 1) + 1,
+          gameStarted: true,
+          currentTurn: 'white',
+          [`timeLeft.white`]: initialTime,
+          [`timeLeft.black`]: initialTime
+        });
+
+        setGameResult(null);
+        setShowGameOverModal(false);
+        setDrawOffered(null);
+        setGameStarted(true);
+        
+        // Asegurar que el turno está correctamente establecido
+        setIsPlayerTurn(playerColor === 'white');
+      }
+    });
+
+    return () => unsubscribe();
+  }, [challengeId, initialTime, playerColor]);
+
+  useEffect(() => {
+    if (!challengeId) return;
+
+    const unsubscribe = onSnapshot(doc(db, 'challenges', challengeId), (doc) => {
+      const data = doc.data();
+      if (!data) return;
+
+      // Actualizar modal si el juego ha terminado
+      if (data.status === 'completed') {
+        setGameResult(data.result);
+        setGameEndReason(data.endReason);
+        setShowGameOverModal(true);
+        
+        // Actualizar puntuaciones
+        setChallengeState(prev => ({
+          ...prev,
+          challenge: {
+            ...prev.challenge!,
+            whiteScore: data.score?.white || 0,
+            blackScore: data.score?.black || 0,
+            results: [...(prev.challenge?.results || []), data.result]
+          }
+        }));
+      }
+    });
+
+    return () => unsubscribe();
+  }, [challengeId]);
+
+  // Añadir un useEffect para manejar las actualizaciones del estado del juego
+  useEffect(() => {
+    if (!challengeId) return;
+
+    const unsubscribe = onSnapshot(doc(db, 'challenges', challengeId), (docSnapshot) => {
+      const data = docSnapshot.data();
+      if (!data) return;
+
+      // Actualizar el estado solo cuando sea necesario
+      setChallengeState(prevState => {
+        if (JSON.stringify(prevState.challenge?.results) === JSON.stringify(data.results)) {
+          return prevState;
+        }
+
+        return {
+          ...prevState,
+          challenge: {
+            ...prevState.challenge!,
+            id: challengeId,
+            ...data,
+          } as Challenge,
+          currentGame: data.currentGame || 1,
+          results: data.results || []
+        };
+      });
+    });
+
+    return () => unsubscribe();
+  }, [challengeId]);
+
   if (isLoading) {
     return <div className="loading">Cargando reto...</div>;
   }
 
   // Manejar movimientos
-  const makeMove = (sourceSquare: Square, targetSquare: Square) => {
-    if (!isPlayerTurn || !challengeId || !auth.currentUser) {
+  const makeMove = (from: Square, to: Square): boolean => {
+    try {
+      const move = game.move({ from, to, promotion: 'q' });
+      if (move && challengeId) {
+        // Verificar mate después del movimiento
+        if (game.isCheckmate()) {
+          const winner = game.turn() === 'w' ? 'black' : 'white';
+          const result = winner === 'white' ? '1-0' : '0-1';
+          
+          // Actualizar Firestore con el resultado
+          updateDoc(doc(db, 'challenges', challengeId), {
+            status: 'completed',
+            result: result,
+            endReason: 'checkmate',
+            winner: winner,
+            [`score.${winner}`]: increment(1)
+          });
+          
+          // Actualizar estado local
+          setGameResult(result);
+          setGameEndReason('checkmate');
+          setShowGameOverModal(true);
+        }
+        
+        // Actualizar Firebase con el estado del juego
+        updateDoc(doc(db, 'challenges', challengeId), {
+          fen: game.fen(),
+          lastMove: { from, to },
+          currentTurn: game.turn() === 'w' ? 'white' : 'black'
+        });
+        
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error en makeMove:', error);
       return false;
     }
-
-    const move = game.move({
-      from: sourceSquare,
-      to: targetSquare,
-      promotion: 'q'
-    });
-
-    if (move === null) return false;
-
-    // Crear una nueva instancia del juego para verificar el jaque mate
-    const gameCopy = new Chess(game.fen());
-    const isCheckmate = gameCopy.isGameOver() && gameCopy.isCheckmate();
-    
-    // Actualizar Firebase con el estado del juego
-    updateDoc(doc(db, 'challenges', challengeId), {
-      fen: game.fen(),
-      lastMove: { from: sourceSquare, to: targetSquare },
-      currentTurn: playerColor === 'white' ? 'black' : 'white',
-      ...(isCheckmate && {
-        status: 'completed',
-        winner: playerColor,
-        result: playerColor === 'white' ? '1-0' : '0-1',
-        endReason: 'checkmate',
-        completedAt: serverTimestamp()
-      })
-    }).catch(console.error);
-
-    // Mostrar mensaje de jaque mate
-    if (isCheckmate) {
-      toast.success('¡Jaque Mate! Has ganado la partida 🏆');
-    }
-
-    return true;
   };
 
   const handleDrawOffer = async () => {
@@ -376,9 +492,41 @@ const Challenge = () => {
           offeredAt: Date.now()
         }
       });
+      setDrawOffered(auth.currentUser.uid);
       toast.success('Oferta de tablas enviada');
     } catch (error) {
       toast.error('Error al ofrecer tablas');
+    }
+  };
+
+  const handleDrawResponse = async (accept: boolean) => {
+    if (!challengeId || !auth.currentUser) return;
+    
+    try {
+      const challengeRef = doc(db, 'challenges', challengeId);
+      if (accept) {
+        await updateDoc(challengeRef, {
+          status: 'completed',
+          result: '½-½',
+          endReason: 'draw_agreed',
+          drawOffer: null,
+          completedAt: serverTimestamp()
+        });
+        setGameResult('½-½');
+        setGameEndReason('draw');
+        setShowGameOverModal(true);
+        toast.success('Tablas acordadas');
+      } else {
+        await updateDoc(challengeRef, {
+          drawOffer: null
+        });
+        toast('Oferta de tablas rechazada', {
+          icon: 'ℹ️'
+        });
+      }
+      setDrawOffered(null);
+    } catch (error) {
+      toast.error('Error al responder a la oferta de tablas');
     }
   };
 
@@ -400,32 +548,91 @@ const Challenge = () => {
   };
 
   const handleTimeUpdate = async (color: 'white' | 'black', time: number) => {
-    if (!challengeId) return;
+    if (!challengeId || !gameStarted) return;
     
+    setChallengeState(prev => ({
+      ...prev,
+      [`time${color.charAt(0).toUpperCase() + color.slice(1)}`]: time
+    }));
+
     try {
-      const challengeRef = doc(db, 'challenges', challengeId);
-      await updateDoc(challengeRef, {
+      await updateDoc(doc(db, 'challenges', challengeId), {
         [`timeLeft.${color}`]: time
       });
     } catch (error) {
-      console.error('Error al actualizar el tiempo:', error);
+      console.error('Error updating time:', error);
     }
   };
 
-  const handleTimeout = async (winner: 'white' | 'black') => {
-    if (!challengeId) return;
+  const handleTimeout = async (loser: 'white' | 'black') => {
+    const result = loser === 'white' ? '0-1' : '1-0';
+    setGameResult(result);
+    setGameEndReason('timeout');
+    setShowGameOverModal(true);
+  };
+
+  // Función para iniciar siguiente partida
+  const startNextGame = async () => {
+    if (challengeState.currentGame < challengeState.challenge?.config.numberOfGames!) {
+      // Lógica para iniciar siguiente partida
+      setShowGameOverModal(false);
+      // ... resto de la lógica
+    }
+  };
+
+  // Modificar handleGameOver para evitar actualizaciones innecesarias
+  const handleGameOver = (winner: 'white' | 'black' | 'draw') => {
+    if (!challengeId || challengeState.gameFinished) return;
+
+    const result = winner === 'white' ? '1-0' : winner === 'black' ? '0-1' : '½-½';
+    const newResults = [...(challengeState.challenge?.results || [])];
+    newResults[challengeState.currentGame - 1] = result;
+
+    updateDoc(doc(db, 'challenges', challengeId), {
+      results: newResults,
+      gameFinished: true,
+      currentGame: challengeState.currentGame,
+      gameState: newResults.length < challengeState.challenge?.config.numberOfGames! ? 'waiting' : 'finished'
+    });
+  };
+
+  const handleNextGame = async () => {
+    if (!challengeId || !playerColor) return;
     
     try {
-      const challengeRef = doc(db, 'challenges', challengeId);
-      await updateDoc(challengeRef, {
-        status: 'completed',
-        winner,
-        result: winner === 'white' ? '1-0' : '0-1',
-        endReason: 'timeout'
+      await updateDoc(doc(db, 'challenges', challengeId), {
+        [`readyForNextGame.${playerColor}`]: true
       });
     } catch (error) {
-      toast.error('Error al finalizar la partida por tiempo');
+      console.error('Error al preparar nueva partida:', error);
+      toast.error('Error al preparar nueva partida');
     }
+  };
+
+  const handleSquareClick = (square: Square) => {
+    if (!isPlayerTurn) return;
+
+    if (selectedSquare === null) {
+      // Primera casilla seleccionada
+      const piece = game.get(square);
+      if (piece && piece.color === (playerColor === 'white' ? 'w' : 'b')) {
+        setSelectedSquare(square);
+      }
+    } else {
+      // Segunda casilla seleccionada
+      if (square === selectedSquare) {
+        setSelectedSquare(null);
+      } else {
+        const moveResult = makeMove(selectedSquare, square);
+        setSelectedSquare(null);
+        return moveResult;
+      }
+    }
+  };
+
+  // Crear un adaptador para onPieceDrop
+  const handlePieceDrop = (sourceSquare: Square, targetSquare: Square, _piece: string): boolean => {
+    return makeMove(sourceSquare, targetSquare);
   };
 
   return (
@@ -433,111 +640,149 @@ const Challenge = () => {
       <Header />
       <div className="challenge-content container-fluid pt-5">
         <div className="row">
-          {/* Panel izquierdo */}
           <div className="col-12 col-lg-8">
-            {/* Jugador Negro */}
-            <div className="player-box black mb-3">
-              <div className="row align-items-center w-100">
-                <div className="col-auto">
-                  <div className="player-avatar">
-                    <i className="fas fa-user"></i>
+            {playerColor === 'black' ? (
+              <>
+                {/* Jugador Blanco arriba cuando somos negras */}
+                <div className="player-box white mb-3">
+                  <div className="row align-items-center w-100">
+                    <div className="col text-center">
+                      <div className="player-info">
+                        <span className="player-name text-black">
+                          {challengeState.players.whiteUsername || 'Esperando...'}
+                        </span>
+                        <span className="player-rating">
+                          <i className="fas fa-star me-1"></i>1500
+                        </span>
+                      </div>
+                    </div>
+                    <div className="col-auto">
+                      <GameClock
+                        timeInMinutes={challengeState.challenge?.config.timeControl.time || 0}
+                        increment={challengeState.challenge?.config.timeControl.increment || 0}
+                        isActive={gameStarted && game.turn() === 'w'}
+                        color="white"
+                        onTimeout={async () => await handleTimeout('black')}
+                        onTimeUpdate={(time) => handleTimeUpdate('white', time)}
+                        remainingTime={challengeState.timeWhite}
+                      />
+                    </div>
                   </div>
                 </div>
-                <div className="col">
-                  <div className="player-info">
-                    <span className="player-name text-white">
-                      {challengeState.players.blackUsername || 'Esperando...'}
-                    </span>
-                    <span className="player-rating">
-                      <i className="fas fa-star me-1"></i>1500
-                    </span>
+              </>
+            ) : (
+              <>
+                {/* Jugador Negro arriba cuando somos blancas */}
+                <div className="player-box black mb-3">
+                  <div className="row align-items-center w-100">
+                    <div className="col text-center">
+                      <div className="player-info">
+                        <span className="player-name text-black">
+                          {challengeState.players.blackUsername || 'Esperando...'}
+                        </span>
+                        <span className="player-rating">
+                          <i className="fas fa-star me-1"></i>1500
+                        </span>
+                      </div>
+                    </div>
+                    <div className="col-auto">
+                      <GameClock
+                        timeInMinutes={challengeState.challenge?.config.timeControl.time || 0}
+                        increment={challengeState.challenge?.config.timeControl.increment || 0}
+                        isActive={gameStarted && game.turn() === 'b'}
+                        color="black"
+                        onTimeout={async () => await handleTimeout('white')}
+                        onTimeUpdate={(time) => handleTimeUpdate('black', time)}
+                        remainingTime={challengeState.timeBlack}
+                      />
+                    </div>
                   </div>
                 </div>
-                <div className="col-auto">
-                  <GameClock
-                    timeInMinutes={challengeState.challenge?.config.timeControl.time || 0}
-                    increment={challengeState.challenge?.config.timeControl.increment || 0}
-                    isActive={gameStarted && game.turn() === 'b'}
-                    color="black"
-                    onTimeout={async () => await handleTimeout('white')}
-                    onTimeUpdate={(time) => handleTimeUpdate('black', time)}
-                    remainingTime={challengeState.timeBlack}
-                  />
-                </div>
-              </div>
-            </div>
+              </>
+            )}
 
             {/* Tablero */}
             <div className="board-wrapper mb-3">
               <div className="board-container">
                 <Chessboard 
                   position={game.fen()}
-                  onPieceDrop={makeMove}
+                  onPieceDrop={handlePieceDrop}
+                  onSquareClick={handleSquareClick}
                   boardOrientation={playerColor === 'black' ? 'black' : 'white'}
                   customBoardStyle={{
                     borderRadius: '4px',
                     boxShadow: '0 2px 5px rgba(0, 0, 0, 0.3)'
                   }}
+                  customSquareStyles={{
+                    ...(selectedSquare && {
+                      [selectedSquare]: {
+                        backgroundColor: 'rgba(255, 140, 66, 0.4)'
+                      }
+                    })
+                  }}
                 />
               </div>
             </div>
 
-            {/* Jugador Blanco */}
-            <div className="player-box white mb-3">
-              <div className="row align-items-center w-100">
-                <div className="col-auto order-3">
-                  <div className="player-avatar">
-                    <i className="fas fa-user"></i>
+            {playerColor === 'black' ? (
+              <>
+                {/* Jugador Negro abajo cuando somos negras */}
+                <div className="player-box black mb-3">
+                  <div className="row align-items-center w-100">
+                    <div className="col text-center">
+                      <div className="player-info">
+                        <span className="player-name text-black">
+                          {challengeState.players.blackUsername || 'Esperando...'}
+                        </span>
+                        <span className="player-rating">
+                          <i className="fas fa-star me-1"></i>1500
+                        </span>
+                      </div>
+                    </div>
+                    <div className="col-auto">
+                      <GameClock
+                        timeInMinutes={challengeState.challenge?.config.timeControl.time || 0}
+                        increment={challengeState.challenge?.config.timeControl.increment || 0}
+                        isActive={gameStarted && game.turn() === 'b'}
+                        color="black"
+                        onTimeout={async () => await handleTimeout('white')}
+                        onTimeUpdate={(time) => handleTimeUpdate('black', time)}
+                        remainingTime={challengeState.timeBlack}
+                      />
+                    </div>
                   </div>
                 </div>
-                <div className="col order-2">
-                  <div className="player-info text-end">
-                    <span className="player-name text-white">
-                      {challengeState.players.whiteUsername || 'Esperando...'}
-                    </span>
-                    <span className="player-rating">
-                      <i className="fas fa-star me-1"></i>1500
-                    </span>
+              </>
+            ) : (
+              <>
+                {/* Jugador Blanco abajo cuando somos blancas */}
+                <div className="player-box white mb-3">
+                  <div className="row align-items-center w-100">
+                    <div className="col text-center">
+                      <div className="player-info">
+                        <span className="player-name text-black">
+                          {challengeState.players.whiteUsername || 'Esperando...'}
+                        </span>
+                        <span className="player-rating">
+                          <i className="fas fa-star me-1"></i>1500
+                        </span>
+                      </div>
+                    </div>
+                    <div className="col-auto">
+                      <GameClock
+                        timeInMinutes={challengeState.challenge?.config.timeControl.time || 0}
+                        increment={challengeState.challenge?.config.timeControl.increment || 0}
+                        isActive={gameStarted && game.turn() === 'w'}
+                        color="white"
+                        onTimeout={async () => await handleTimeout('black')}
+                        onTimeUpdate={(time) => handleTimeUpdate('white', time)}
+                        remainingTime={challengeState.timeWhite}
+                      />
+                    </div>
                   </div>
                 </div>
-                <div className="col-auto order-1">
-                  <GameClock
-                    timeInMinutes={challengeState.challenge?.config.timeControl.time || 0}
-                    increment={challengeState.challenge?.config.timeControl.increment || 0}
-                    isActive={gameStarted && game.turn() === 'w'}
-                    color="white"
-                    onTimeout={async () => await handleTimeout('black')}
-                    onTimeUpdate={(time) => handleTimeUpdate('white', time)}
-                    remainingTime={challengeState.timeWhite}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Controles */}
-            <div className="game-actions">
-              <div className="row g-2">
-                <div className="col">
-                  <button 
-                    className="btn btn-secondary w-100"
-                    onClick={handleDrawOffer}
-                    disabled={!isPlayerTurn}
-                  >
-                    <i className="fas fa-handshake me-2"></i>
-                    Tablas
-                  </button>
-                </div>
-                <div className="col">
-                  <button 
-                    className="btn btn-danger w-100"
-                    onClick={handleResign}
-                  >
-                    <i className="fas fa-flag me-2"></i>
-                    Abandonar
-                  </button>
-                </div>
-              </div>
-            </div>
+              </>
+            )}
           </div>
 
           {/* Panel derecho */}
@@ -559,11 +804,59 @@ const Challenge = () => {
                   results={challengeState.challenge?.results || []}
                   currentGame={challengeState.currentGame}
                 />
+                
+                {/* Añadir botones de control */}
+                <div className="game-controls mt-4">
+                  {drawOffered && drawOffered !== auth.currentUser?.uid ? (
+                    <div className="draw-offer-buttons">
+                      <button 
+                        className="btn btn-success me-2" 
+                        onClick={() => handleDrawResponse(true)}
+                      >
+                        Aceptar tablas
+                      </button>
+                      <button 
+                        className="btn btn-danger" 
+                        onClick={() => handleDrawResponse(false)}
+                      >
+                        Rechazar tablas
+                      </button>
+                    </div>
+                  ) : (
+                    <button 
+                      className="btn btn-warning me-2" 
+                      onClick={() => handleDrawOffer()}
+                      disabled={!gameStarted || !!drawOffered}
+                    >
+                      {drawOffered === auth.currentUser?.uid ? 'Tablas ofrecidas' : 'Ofrecer Tablas'}
+                    </button>
+                  )}
+                  
+                  <button 
+                    className="btn btn-danger" 
+                    onClick={() => handleResign()}
+                    disabled={!gameStarted}
+                  >
+                    Abandonar
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+      <GameOverModal
+        isOpen={showGameOverModal}
+        gameResult={gameResult as '1-0' | '0-1' | '½-½'}
+        reason={gameEndReason ?? 'checkmate'}
+        whiteScore={challengeState.challenge?.whiteScore || 0}
+        blackScore={challengeState.challenge?.blackScore || 0}
+        currentGame={challengeState.currentGame}
+        totalGames={challengeState.challenge?.config.numberOfGames || 1}
+        onNextGame={handleNextGame}
+        readyForNextGame={challengeState.challenge?.readyForNextGame || {}}
+        playerColor={playerColor}
+      />
     </div>
   );
 };

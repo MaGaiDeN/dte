@@ -1,42 +1,53 @@
 .match-score-table {
-  margin: 1rem 0;
+  background: var(--color-bg-light);
+  border-radius: 8px;
+  padding: 1rem;
+  overflow-x: auto;
 }
 
 .match-score-table table {
-  background: var(--color-bg-light);
-  border-radius: 8px;
-  overflow: hidden;
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'Roboto Mono', monospace;
 }
 
-.player-name {
+.match-score-table th,
+.match-score-table td {
+  padding: 0.75rem;
+  text-align: center;
+  border: 1px solid #3a3734;
+}
+
+.match-score-table th {
+  background-color: #2a2724;
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.player-column {
+  text-align: left;
+  padding-left: 1rem;
   min-width: 120px;
-  font-family: var(--font-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.game-number,
-.game-result {
+.game-column {
   min-width: 40px;
-  transition: background-color 0.2s ease;
 }
 
-.current {
-  background-color: var(--color-accent) !important;
-  color: var(--color-text) !important;
+.game-column.current {
+  background-color: var(--color-accent);
+  color: white;
 }
 
-.game-result {
-  font-family: var(--font-secondary);
-  font-weight: bold;
+.total-column {
+  font-weight: 600;
+  color: var(--color-accent);
+  min-width: 60px;
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .match-score-table {
-    margin: 0.5rem 0;
-  }
-  
-  .match-score-table th,
-  .match-score-table td {
-    padding: 0.5rem !important;
-  }
+.match-score-table tr:hover {
+  background-color: #2a2724;
 } 

@@ -1,41 +1,40 @@
-import React from 'react';
-import { TimeControlOption } from '../MatchSettings/types/match';
+import { TimeControlOption, TIME_CONTROL_OPTIONS } from '../MatchSettings/types/match';
 import './TimeControl.css';
 
 interface TimeControlProps {
+  selectedOption: TimeControlOption;
   options: TimeControlOption[];
-  selected: TimeControlOption;
-  onSelect: (option: TimeControlOption) => void;
+  onChange: (option: TimeControlOption) => void;
 }
 
-const TimeControl = ({ options, selected, onSelect }: TimeControlProps) => {
-  const categories = ['Bullet', 'Blitz', 'Rápida', 'Clásica'];
-  
+const TimeControl = ({ selectedOption, options, onChange }: TimeControlProps) => {
+  const timeCategories = Array.from(new Set(options.map(opt => opt.name)));
+
   return (
     <div className="time-control">
       <h3>Control de Tiempo</h3>
-      <div className="time-options">
-        {categories.map(category => (
-          <React.Fragment key={category}>
-            <div className="time-category">{category}</div>
-            <div className="time-category-options">
-              {options
-                .filter(option => option.name === category)
-                .map((option, index) => (
-                  <button
-                    key={`${option.time}-${option.increment}-${index}`}
-                    className={`time-option ${selected === option ? 'selected' : ''}`}
-                    onClick={() => onSelect(option)}
-                  >
-                    <span className="time">
-                      {option.time}+{option.increment}
-                    </span>
-                  </button>
-                ))}
-            </div>
-          </React.Fragment>
-        ))}
-      </div>
+      {timeCategories.map(category => (
+        <div key={category} className="time-category">
+          <span>{category}</span>
+          <div className="time-category-options">
+            {options
+              .filter(opt => opt.name === category)
+              .map(opt => (
+                <button
+                  key={`${opt.time}-${opt.increment}`}
+                  className={`time-option ${
+                    opt.time === selectedOption.time && 
+                    opt.increment === selectedOption.increment ? 'selected' : ''
+                  }`}
+                  onClick={() => onChange(opt)}
+                >
+                  <span className="time">{`${opt.time}+${opt.increment}`}</span>
+                  <span className="name">{opt.name}</span>
+                </button>
+              ))}
+          </div>
+        </div>
+      ))}
     </div>
   );
 };

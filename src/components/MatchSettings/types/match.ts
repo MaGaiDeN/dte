@@ -1,8 +1,8 @@
-export interface TimeControlOption {
+export type TimeControlOption = {
+  name: string;
   time: number;
   increment: number;
-  name: string;
-}
+};
 
 export interface MatchConfig {
   timeControl: TimeControlOption;

@@ -158,4 +158,21 @@
   font-weight: 600;
   font-size: 1.1rem;
   color: var(--color-text);
+}
+
+.game-controls {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.game-controls button {
+  min-width: 120px;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+}
+
+.game-controls button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 } 

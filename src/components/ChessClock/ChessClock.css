@@ -5,15 +5,52 @@
   margin: 10px 0;
 }
 
-.clock-display {
-  background-color: #2c3e50;
-  color: #ffffff;
-  padding: 15px 25px;
+.game-clock {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 1.8rem;
+  font-weight: 600;
+  padding: 0.8rem 1.5rem;
   border-radius: 8px;
-  font-size: 24px;
-  font-weight: bold;
   min-width: 120px;
   text-align: center;
+  transition: all 0.2s ease;
+}
+
+.game-clock.white {
+  background: #272522;
+  color: #ffffff;
+  border: 2px solid #3a3734;
+}
+
+.game-clock.black {
+  background: #3a3734;
+  color: #ffffff;
+  border: 2px solid #272522;
+}
+
+.game-clock.active {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 10px rgba(255, 140, 66, 0.3);
+}
+
+.game-clock.active.white {
+  background: #312e2b;
+}
+
+.game-clock.active.black {
+  background: #423e3a;
+}
+
+/* Animación cuando queda poco tiempo */
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+.game-clock.low-time {
+  color: #ff4444;
+  animation: pulse 1s infinite;
 }
 
 .player-info {

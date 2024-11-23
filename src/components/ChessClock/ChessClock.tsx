@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import './ChessClock.css';
 
 interface GameClockProps {
@@ -11,7 +11,7 @@ interface GameClockProps {
   remainingTime: number;
 }
 
-const GameClock: React.FC<GameClockProps> = ({
+const GameClock = ({
   timeInMinutes,
   increment,
   isActive,
@@ -19,42 +19,49 @@ const GameClock: React.FC<GameClockProps> = ({
   onTimeout,
   onTimeUpdate,
   remainingTime
-}) => {
-  const [time, setTime] = useState(remainingTime);
+}: GameClockProps) => {
+  const [time, setTime] = useState(remainingTime || timeInMinutes * 60);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    setTime(remainingTime);
-  }, [remainingTime]);
+    setTime(remainingTime || timeInMinutes * 60);
+  }, [remainingTime, timeInMinutes]);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-
     if (isActive && time > 0) {
-      interval = setInterval(() => {
+      timerRef.current = setInterval(() => {
         setTime(prevTime => {
           const newTime = prevTime - 1;
           onTimeUpdate(newTime);
-          if (newTime <= 0) {
-            onTimeout();
-          }
           return newTime;
         });
       }, 1000);
+    } else if (!isActive && timerRef.current) {
+      clearInterval(timerRef.current);
+      if (increment > 0 && time > 0) {
+        setTime(prevTime => {
+          const newTime = prevTime + increment;
+          onTimeUpdate(newTime);
+          return newTime;
+        });
+      }
     }
 
     return () => {
-      if (interval) {
-        clearInterval(interval);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
       }
     };
-  }, [isActive, time, onTimeout, onTimeUpdate]);
+  }, [isActive, increment]);
 
-  const getClockClasses = () => {
-    const classes = ['game-clock'];
-    if (isActive) classes.push('active');
-    if (time < 30) classes.push('warning');
-    return classes.join(' ');
-  };
+  useEffect(() => {
+    if (time <= 0) {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+      onTimeout();
+    }
+  }, [time, onTimeout]);
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -63,7 +70,7 @@ const GameClock: React.FC<GameClockProps> = ({
   };
 
   return (
-    <div className={getClockClasses()}>
+    <div className={`game-clock ${color} ${isActive ? 'active' : ''}`}>
       {formatTime(time)}
     </div>
   );

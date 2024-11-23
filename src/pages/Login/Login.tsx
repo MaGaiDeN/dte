@@ -12,12 +12,12 @@ import Header from '../../components/Header/Header';
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const challengeId = window.location.pathname.split('/challenge/')[1];
-  console.log('URL actual:', window.location.pathname);
-  console.log('ChallengeId extraído:', challengeId);
   
+  // Extraer challengeId de la URL si existe
+  const challengeId = window.location.pathname.split('/challenge/')[1];
+  
+  // Definir la ruta de redirección
   const redirectPath = challengeId ? `/challenge/${challengeId}` : (location.state?.redirect || '/lobby');
-  console.log('Ruta de redirección:', redirectPath);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -27,7 +27,8 @@ const Login = () => {
     e.preventDefault();
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      navigate(redirectPath);
+      toast.success('¡Bienvenido de nuevo!');
+      navigate(redirectPath);  // Usar la ruta dinámica
     } catch (error: any) {
       console.error('Error al iniciar sesión:', error);
       if (error.code === 'auth/invalid-credential') {

@@ -118,9 +118,9 @@ const Lobby = ({ challengeId, challenge }: LobbyProps) => {
         <div className="create-challenge">
           <h2>Crear nuevo reto</h2>
           <TimeControl
+            selectedOption={matchConfig.timeControl}
             options={TIME_CONTROL_OPTIONS}
-            selected={matchConfig.timeControl}
-            onSelect={(option) => setMatchConfig({...matchConfig, timeControl: option})}
+            onChange={(option) => setMatchConfig({...matchConfig, timeControl: option})}
           />
           <MatchSettings config={matchConfig} onChange={setMatchConfig} />
           <GameCount selectedCount={matchConfig.numberOfGames} onChange={(count) => setMatchConfig({...matchConfig, numberOfGames: count})} />
