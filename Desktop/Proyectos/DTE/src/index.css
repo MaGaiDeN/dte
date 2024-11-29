@@ -16,14 +16,24 @@ html {
 body {
   min-height: 100vh;
   margin: 0;
-  background-color: rgb(249, 250, 251);
 }
 
 #root {
   min-height: 100vh;
 }
 
-/* Estilos adicionales para modales y transiciones */
+/* Dark mode transitions */
+.dark body {
+  color-scheme: dark;
+}
+
+/* Smooth transitions for theme changes */
+* {
+  transition-property: color, background-color, border-color;
+  transition-duration: 200ms;
+}
+
+/* Modal styles */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -37,6 +47,10 @@ body {
   z-index: 50;
 }
 
+.dark .modal-overlay {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
 .modal-content {
   background: white;
   padding: 2rem;
@@ -47,7 +61,12 @@ body {
   overflow-y: auto;
 }
 
-/* Animaciones */
+.dark .modal-content {
+  background: #1f2937;
+  color: white;
+}
+
+/* Animations */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }

@@ -3,7 +3,6 @@ import { Plus } from 'lucide-react';
 import type { Practice } from './types/Habit';
 import { AddHabitModal } from './components/AddHabitModal';
 import { ReflectionModal } from './components/ReflectionModal';
-import { PracticeLegend } from './components/PracticeLegend';
 import { PracticeStats } from './components/PracticeStats';
 import { PracticeCard } from './components/PracticeCard';
 import { Header } from './components/Header';
@@ -16,6 +15,7 @@ function App() {
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedPracticeId, setSelectedPracticeId] = useState('');
   const [isReflectionModalOpen, setIsReflectionModalOpen] = useState(false);
+  const [editingPractice, setEditingPractice] = useState<Practice | null>(null);
 
   useEffect(() => {
     const savedPractices = localStorage.getItem('practices');
@@ -28,7 +28,6 @@ function App() {
   }, []);
 
   const handleReset = () => {
-    // Update the start date to current date for all default practices
     const resetPractices = DEFAULT_PRACTICES.map(practice => ({
       ...practice,
       startDate: new Date().toISOString().split('T')[0]
@@ -37,32 +36,24 @@ function App() {
     localStorage.setItem('practices', JSON.stringify(resetPractices));
   };
 
+  const handleEditPractice = (practice: Practice) => {
+    setEditingPractice(practice);
+    setIsAddModalOpen(true);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header onReset={handleReset} />
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+      <Header onReset={handleReset} onNewPractice={() => {
+        setEditingPractice(null);
+        setIsAddModalOpen(true);
+      }} />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <div className="mb-6 sm:mb-8">
           <PracticeStats practices={practices} />
         </div>
 
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center space-x-4">
-            <h2 className="text-2xl font-bold text-gray-900">
-              Prácticas Contemplativas
-            </h2>
-            <PracticeLegend />
-          </div>
-          <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            <Plus className="h-5 w-5 mr-2" />
-            Nueva Práctica
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 gap-6">
+        <div className="grid grid-cols-1 gap-4 sm:gap-6">
           {practices.map((practice) => (
             <PracticeCard
               key={practice.id}
@@ -77,13 +68,7 @@ function App() {
                 setSelectedDate(date);
                 setIsReflectionModalOpen(true);
               }}
-              onEdit={(practice) => {
-                const newPractices = practices.map((p) =>
-                  p.id === practice.id ? practice : p
-                );
-                setPractices(newPractices);
-                localStorage.setItem('practices', JSON.stringify(newPractices));
-              }}
+              onEdit={handleEditPractice}
             />
           ))}
         </div>
@@ -91,7 +76,11 @@ function App() {
 
       <AddHabitModal
         isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
+        onClose={() => {
+          setIsAddModalOpen(false);
+          setEditingPractice(null);
+        }}
+        editPractice={editingPractice}
         onAdd={(form) => {
           const newPractice: Practice = {
             id: crypto.randomUUID(),
@@ -107,6 +96,13 @@ function App() {
             startDate: new Date().toISOString().split('T')[0]
           };
           const newPractices = [...practices, newPractice];
+          setPractices(newPractices);
+          localStorage.setItem('practices', JSON.stringify(newPractices));
+        }}
+        onEdit={(updatedPractice) => {
+          const newPractices = practices.map((p) =>
+            p.id === updatedPractice.id ? updatedPractice : p
+          );
           setPractices(newPractices);
           localStorage.setItem('practices', JSON.stringify(newPractices));
         }}
@@ -135,35 +131,9 @@ function App() {
             );
           }
 
-          // Calculate progress
           const totalDays = practice.duration;
           const completedDays = practice.completedDates.length;
           practice.progress = (completedDays / totalDays) * 100;
-
-          // Calculate streaks
-          let currentStreak = 0;
-          let longestStreak = practice.longestStreak;
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-
-          for (let i = practice.completedDates.length - 1; i >= 0; i--) {
-            const currentDate = new Date(practice.completedDates[i]);
-            const previousDate = i > 0 ? new Date(practice.completedDates[i - 1]) : null;
-
-            if (previousDate) {
-              const diffDays = Math.floor(
-                (currentDate.getTime() - previousDate.getTime()) / (1000 * 60 * 60 * 24)
-              );
-              if (diffDays === 1) {
-                currentStreak++;
-              } else {
-                break;
-              }
-            }
-          }
-
-          practice.currentStreak = currentStreak;
-          practice.longestStreak = Math.max(longestStreak, currentStreak);
 
           setPractices(newPractices);
           localStorage.setItem('practices', JSON.stringify(newPractices));
