@@ -28,9 +28,14 @@ function App() {
   }, []);
 
   const handleReset = () => {
+    const today = new Date().toISOString().split('T')[0];
     const resetPractices = DEFAULT_PRACTICES.map(practice => ({
       ...practice,
-      startDate: new Date().toISOString().split('T')[0]
+      startDate: today,
+      completedDates: [],
+      progress: 0,
+      currentStreak: 0,
+      longestStreak: 0
     }));
     setPractices(resetPractices);
     localStorage.setItem('practices', JSON.stringify(resetPractices));
@@ -42,7 +47,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+    <div className="min-h-screen bg-light-primary dark:bg-gray-900 transition-colors duration-200">
       <Header onReset={handleReset} onNewPractice={() => {
         setEditingPractice(null);
         setIsAddModalOpen(true);

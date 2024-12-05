@@ -16,6 +16,7 @@ html {
 body {
   min-height: 100vh;
   margin: 0;
+  background-color: #f1f3f6; /* Updated light theme background */
 }
 
 #root {
@@ -52,7 +53,7 @@ body {
 }
 
 .modal-content {
-  background: white;
+  background: #f8f9fb; /* Updated light theme modal background */
   padding: 2rem;
   border-radius: 0.5rem;
   max-width: 32rem;
@@ -83,4 +84,31 @@ body {
 
 .animate-slide-in {
   animation: slideIn 0.3s ease-out;
+}
+
+/* Custom light theme colors */
+:root {
+  --light-bg-primary: #f1f3f6;
+  --light-bg-secondary: #f8f9fb;
+  --light-bg-tertiary: #ffffff;
+  --light-text-primary: #1a2333;
+  --light-text-secondary: #4b5563;
+  --light-border: #e5e7eb;
+}
+
+/* Light theme component backgrounds */
+.bg-white:not(.dark *) {
+  background-color: #f8f9fb; /* Updated card background */
+}
+
+.text-gray-900:not(.dark *) {
+  color: var(--light-text-primary);
+}
+
+.text-gray-600:not(.dark *) {
+  color: var(--light-text-secondary);
+}
+
+.border-gray-100:not(.dark *) {
+  border-color: #eceef2; /* Updated border color */
 }

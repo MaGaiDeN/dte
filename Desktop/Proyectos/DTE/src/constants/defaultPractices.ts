@@ -1,5 +1,11 @@
 import type { Practice } from '../types/Habit';
 
+// Helper function to get today's date in YYYY-MM-DD format
+const getTodayDate = () => {
+  const today = new Date();
+  return today.toISOString().split('T')[0];
+};
+
 export const DEFAULT_PRACTICES: Practice[] = [
   {
     id: '1',
@@ -12,7 +18,7 @@ export const DEFAULT_PRACTICES: Practice[] = [
     currentStreak: 0,
     longestStreak: 0,
     duration: 30,
-    startDate: new Date().toISOString().split('T')[0]
+    startDate: getTodayDate() // Use today's date
   },
   {
     id: '2',
@@ -25,7 +31,7 @@ export const DEFAULT_PRACTICES: Practice[] = [
     currentStreak: 0,
     longestStreak: 0,
     duration: 30,
-    startDate: new Date().toISOString().split('T')[0]
+    startDate: getTodayDate() // Use today's date
   },
   {
     id: '3',
@@ -38,6 +44,6 @@ export const DEFAULT_PRACTICES: Practice[] = [
     currentStreak: 0,
     longestStreak: 0,
     duration: 30,
-    startDate: new Date().toISOString().split('T')[0]
+    startDate: getTodayDate() // Use today's date
   }
 ];

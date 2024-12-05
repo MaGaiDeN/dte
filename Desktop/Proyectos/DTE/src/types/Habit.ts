@@ -16,6 +16,7 @@ export interface Habit {
   progress: number;
   currentStreak: number;
   longestStreak: number;
+  observations?: string;
 }
 
 export interface Practice {
@@ -29,7 +30,8 @@ export interface Practice {
   currentStreak: number;
   longestStreak: number;
   duration: PracticeDuration;
-  startDate: string; // Added startDate field
+  startDate: string;
+  observations?: string;
 }
 
 export interface PracticeStatus {
@@ -42,4 +44,5 @@ export interface NewPracticeForm {
   description: string;
   type: string;
   duration: PracticeDuration;
+  observations?: string;
 }

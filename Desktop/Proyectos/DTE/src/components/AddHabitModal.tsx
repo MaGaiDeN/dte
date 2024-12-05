@@ -12,16 +12,28 @@ interface AddHabitModalProps {
   editPractice?: Practice | null;
 }
 
-const DURATION_OPTIONS: { value: PracticeDuration; label: string }[] = [
-  { value: 30, label: '30 días' },
-  { value: 60, label: '60 días' },
-  { value: 90, label: '90 días' },
+const DURATION_OPTIONS: { value: PracticeDuration; label: string; description: string }[] = [
+  { value: 30, label: '30 días', description: 'Ideal para establecer una base sólida' },
+  { value: 60, label: '60 días', description: 'Para una práctica más profunda y sostenida' },
+  { value: 90, label: '90 días', description: 'Compromiso profundo para transformación completa' },
 ];
 
 const PRACTICE_TYPES = [
-  { value: 'meditation', label: 'Meditación', description: 'Práctica de respiración consciente y observación del momento presente' },
-  { value: 'selfInquiry', label: 'Autoindagación', description: 'Observación sin juicios de pensamientos y emociones' },
-  { value: 'contemplation', label: 'Contemplación', description: 'Práctica de presencia pura y disolución del ego' }
+  { 
+    value: 'meditation', 
+    label: 'Meditación', 
+    description: 'Práctica de respiración consciente y observación del momento presente' 
+  },
+  { 
+    value: 'selfInquiry', 
+    label: 'Autoindagación', 
+    description: 'Observación sin juicios de pensamientos y emociones' 
+  },
+  { 
+    value: 'contemplation', 
+    label: 'Contemplación', 
+    description: 'Práctica de presencia pura y disolución del ego' 
+  }
 ];
 
 export function AddHabitModal({ isOpen, onClose, onAdd, onEdit, editPractice }: AddHabitModalProps) {
@@ -30,6 +42,7 @@ export function AddHabitModal({ isOpen, onClose, onAdd, onEdit, editPractice }: 
     description: '',
     type: 'meditation',
     duration: 30,
+    observations: '',
   });
 
   useEffect(() => {
@@ -39,6 +52,7 @@ export function AddHabitModal({ isOpen, onClose, onAdd, onEdit, editPractice }: 
         description: editPractice.description || '',
         type: editPractice.type,
         duration: editPractice.duration,
+        observations: editPractice.observations || '',
       });
     } else {
       setForm({
@@ -46,6 +60,7 @@ export function AddHabitModal({ isOpen, onClose, onAdd, onEdit, editPractice }: 
         description: '',
         type: 'meditation',
         duration: 30,
+        observations: '',
       });
     }
   }, [editPractice]);
@@ -61,12 +76,13 @@ export function AddHabitModal({ isOpen, onClose, onAdd, onEdit, editPractice }: 
         description: form.description,
         type: form.type,
         duration: form.duration,
+        observations: form.observations,
       });
     } else {
       onAdd(form);
     }
 
-    setForm({ name: '', description: '', type: 'meditation', duration: 30 });
+    setForm({ name: '', description: '', type: 'meditation', duration: 30, observations: '' });
     onClose();
   };
 
@@ -100,7 +116,7 @@ export function AddHabitModal({ isOpen, onClose, onAdd, onEdit, editPractice }: 
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 sm:p-6">
-            <form id="habitForm" onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+            <form id="habitForm" onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label htmlFor="practice-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Nombre de la práctica
@@ -123,21 +139,21 @@ export function AddHabitModal({ isOpen, onClose, onAdd, onEdit, editPractice }: 
                   id="practice-description"
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  rows={3}
+                  rows={2}
                   className="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   placeholder="Describe tu práctica..."
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Tipo de práctica
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Tipo de Práctica
                 </label>
-                <div className="mt-2 grid grid-cols-1 gap-3">
+                <div className="grid grid-cols-1 gap-3">
                   {PRACTICE_TYPES.map((type) => (
                     <label
                       key={type.value}
-                      className={`relative flex cursor-pointer rounded-lg border p-4 ${
+                      className={`relative flex cursor-pointer rounded-lg border p-4 hover:border-indigo-300 ${
                         form.type === type.value
                           ? 'border-indigo-500 ring-2 ring-indigo-500'
                           : 'border-gray-300 dark:border-gray-600'
@@ -151,15 +167,13 @@ export function AddHabitModal({ isOpen, onClose, onAdd, onEdit, editPractice }: 
                         onChange={(e) => setForm({ ...form, type: e.target.value })}
                         className="sr-only"
                       />
-                      <div className="flex flex-1">
-                        <div className="flex flex-col">
-                          <span className="block text-sm font-medium text-gray-900 dark:text-gray-100">
-                            {type.label}
-                          </span>
-                          <span className="mt-1 flex items-center text-sm text-gray-500 dark:text-gray-400">
-                            {type.description}
-                          </span>
-                        </div>
+                      <div className="flex flex-col">
+                        <span className="block text-sm font-medium text-gray-900 dark:text-gray-100">
+                          {type.label}
+                        </span>
+                        <span className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                          {type.description}
+                        </span>
                       </div>
                     </label>
                   ))}
@@ -167,14 +181,14 @@ export function AddHabitModal({ isOpen, onClose, onAdd, onEdit, editPractice }: 
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Duración del compromiso
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Duración del Compromiso
                 </label>
-                <div className="mt-2 grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 gap-3">
                   {DURATION_OPTIONS.map((option) => (
                     <label
                       key={option.value}
-                      className={`relative flex cursor-pointer rounded-lg border p-4 ${
+                      className={`relative flex cursor-pointer rounded-lg border p-4 hover:border-indigo-300 ${
                         form.duration === option.value
                           ? 'border-indigo-500 ring-2 ring-indigo-500'
                           : 'border-gray-300 dark:border-gray-600'
@@ -188,14 +202,31 @@ export function AddHabitModal({ isOpen, onClose, onAdd, onEdit, editPractice }: 
                         onChange={(e) => setForm({ ...form, duration: Number(e.target.value) as PracticeDuration })}
                         className="sr-only"
                       />
-                      <div className="flex flex-1 justify-center">
+                      <div className="flex flex-col">
                         <span className="block text-sm font-medium text-gray-900 dark:text-gray-100">
                           {option.label}
+                        </span>
+                        <span className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                          {option.description}
                         </span>
                       </div>
                     </label>
                   ))}
                 </div>
+              </div>
+
+              <div>
+                <label htmlFor="practice-observations" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Observaciones adicionales
+                </label>
+                <textarea
+                  id="practice-observations"
+                  value={form.observations}
+                  onChange={(e) => setForm({ ...form, observations: e.target.value })}
+                  rows={3}
+                  className="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  placeholder="Notas adicionales sobre la práctica..."
+                />
               </div>
             </form>
           </div>
@@ -214,8 +245,17 @@ export function AddHabitModal({ isOpen, onClose, onAdd, onEdit, editPractice }: 
               className="px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 transition-colors w-full sm:w-auto"
             >
               <span className="flex items-center justify-center gap-2">
-                {editPractice ? <Save className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-                {editPractice ? 'Guardar Cambios' : 'Crear Práctica'}
+                {editPractice ? (
+                  <>
+                    <Save className="h-4 w-4" />
+                    Guardar Cambios
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4" />
+                    Crear Práctica
+                  </>
+                )}
               </span>
             </button>
           </div>

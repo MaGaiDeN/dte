@@ -11,12 +11,13 @@ interface PracticeCardProps {
 
 export function PracticeCard({ practice, onDelete, onClick, onEdit }: PracticeCardProps) {
   const getDates = () => {
+    // Generate an array of dates based on the startDate and duration
     const dates: string[] = [];
     const startDate = new Date(practice.startDate);
     
     for (let i = 0; i < practice.duration; i++) {
       const date = new Date(startDate);
-      date.setDate(date.getDate() + i);
+      date.setDate(startDate.getDate() + i);
       dates.push(date.toISOString().split('T')[0]);
     }
     
@@ -27,29 +28,27 @@ export function PracticeCard({ practice, onDelete, onClick, onEdit }: PracticeCa
     return practice.completedDates.includes(date);
   };
 
-  const isDateClickable = (dateStr: string) => {
-    const date = new Date(dateStr);
-    date.setHours(0, 0, 0, 0);
-    const today = new Date();
-    today.setHours(23, 59, 59, 999);
-    return date <= today;
+  const isDateClickable = (dateStr: string, index: number) => {
+    // If there are no completed dates, only allow day 1
+    if (practice.completedDates.length === 0) {
+      return index === 0;
+    }
+
+    // Find the highest day number completed
+    const completedDays = practice.completedDates.map(date => {
+      const dateObj = new Date(date);
+      const startDate = new Date(practice.startDate);
+      return Math.floor((dateObj.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    });
+
+    const maxCompletedDay = Math.max(...completedDays);
+    
+    // Only allow clicking the next day after the highest completed day
+    return index === maxCompletedDay;
   };
 
   const getRemainingDays = () => {
-    const startDate = new Date(practice.startDate);
-    startDate.setHours(0, 0, 0, 0);
-    
-    const endDate = new Date(startDate);
-    endDate.setDate(endDate.getDate() + practice.duration - 1);
-    endDate.setHours(0, 0, 0, 0);
-    
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    if (today > endDate) return 0;
-    
-    const diffTime = endDate.getTime() - today.getTime();
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return practice.duration - (practice.completedDates.length || 0);
   };
 
   const dates = getDates();
@@ -77,7 +76,7 @@ export function PracticeCard({ practice, onDelete, onClick, onEdit }: PracticeCa
               </p>
               <span className="text-xs sm:text-sm text-white/90">•</span>
               <p className="text-xs sm:text-sm text-white/90">
-                {practice.duration} días
+                {practice.duration} días en total
               </p>
             </div>
           </div>
@@ -91,7 +90,9 @@ export function PracticeCard({ practice, onDelete, onClick, onEdit }: PracticeCa
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                onDelete(practice.id);
+                if (window.confirm('¿Estás seguro de que quieres eliminar esta práctica?')) {
+                  onDelete(practice.id);
+                }
               }}
               className="p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
             >
@@ -115,10 +116,11 @@ export function PracticeCard({ practice, onDelete, onClick, onEdit }: PracticeCa
       </div>
       
       <div className="p-4 sm:p-6">
-        <div className="grid grid-cols-7 sm:grid-cols-10 gap-1 sm:gap-2">
+        <div className="grid grid-cols-6 sm:grid-cols-10 gap-1 sm:gap-2">
           {dates.map((date, index) => {
+            const dayNumber = index + 1;
             const isCompleted = isDateCompleted(date);
-            const clickable = isDateClickable(date);
+            const clickable = isDateClickable(date, index);
 
             return (
               <div key={date} className="relative group">
@@ -126,7 +128,7 @@ export function PracticeCard({ practice, onDelete, onClick, onEdit }: PracticeCa
                   onClick={() => clickable && onClick(practice.id, date)}
                   disabled={!clickable}
                   className={`
-                    w-full aspect-square rounded-lg flex items-center justify-center text-xs sm:text-sm
+                    w-full aspect-square rounded-lg flex items-center justify-center text-xs sm:text-sm font-medium
                     transition-all duration-200
                     ${isCompleted 
                       ? 'bg-gradient-to-br from-purple-500 to-indigo-500 text-white shadow-sm' 
@@ -137,12 +139,12 @@ export function PracticeCard({ practice, onDelete, onClick, onEdit }: PracticeCa
                     ${!clickable ? 'cursor-not-allowed' : 'cursor-pointer'}
                   `}
                 >
-                  {index + 1}
+                  {dayNumber}
                 </button>
 
                 <div 
                   className="
-                    hidden sm:block fixed left-1/2 -translate-x-1/2 bottom-full mb-2 
+                    hidden sm:block absolute left-1/2 -translate-x-1/2 bottom-full mb-2 
                     px-2 py-1 bg-gray-800 dark:bg-gray-700 text-white text-xs rounded 
                     opacity-0 group-hover:opacity-100 
                     transition-opacity whitespace-nowrap 
@@ -150,12 +152,7 @@ export function PracticeCard({ practice, onDelete, onClick, onEdit }: PracticeCa
                     shadow-lg
                   "
                 >
-                  {new Date(date).toLocaleDateString('es-ES', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
+                  {`Día ${dayNumber}`}
                   <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-gray-800 dark:border-t-gray-700"></div>
                 </div>
               </div>
