@@ -1,13 +1,14 @@
 import { motion } from 'framer-motion';
 import { X, BookOpen, Brain, Flower2, AlertCircle } from 'lucide-react';
-import { useState, useEffect, useCallback, memo } from 'react';
+import { useState, useEffect, useCallback, memo, useMemo } from 'react';
 import { TRANSFORMATION_SHORTCUTS } from '../types/Reflection';
+import type { Practice } from '../types/Habit';
 
 // Función auxiliar para obtener el día actual basado en la hora local
 const getCurrentDay = () => {
   const now = new Date();
-  // Si es antes de las 00:00, retornamos el día anterior
-  if (now.getHours() < 0) {
+  // Si es antes de las 4:00 AM, consideramos que es parte del día anterior
+  if (now.getHours() < 4) {
     now.setDate(now.getDate() - 1);
   }
   return now.toISOString().split('T')[0];
@@ -18,6 +19,8 @@ interface ReflectionModalProps {
   onClose: () => void;
   date: string;
   practiceId: string;
+  practice: Practice;
+  updatePractice: (practice: Practice) => void;
   onSave: (reflection: {
     practiceId: string;
     date: string;
@@ -50,59 +53,151 @@ interface ReflectionModalProps {
   }) => void;
 }
 
-export const ReflectionModal = memo(({ isOpen, onClose, date, practiceId, onSave }: ReflectionModalProps) => {
-  const [event, setEvent] = useState('');
-  const [emotionalResponse, setEmotionalResponse] = useState('');
-  const [insights, setInsights] = useState('');
-  const [level, setLevel] = useState<'superficial' | 'deep'>('superficial');
-  const [limitingBelief, setLimitingBelief] = useState('');
-  const [newPerspective, setNewPerspective] = useState('');
-  const [practices, setPractices] = useState({
-    breathingExercise: false,
-    witnessPresence: false,
-    mentalClearing: false,
-    selfInquiry: false,
+export const ReflectionModal = memo(({ isOpen, onClose, date, practiceId, practice, updatePractice, onSave }: ReflectionModalProps) => {
+  // Combinar estados relacionados en un solo objeto
+  const [formData, setFormData] = useState({
+    practiceId,  // Agregamos practiceId al estado
+    event: '',
+    emotionalResponse: '',
+    insights: '',
+    level: 'superficial' as 'superficial' | 'deep',
+    limitingBelief: '',
+    newPerspective: '',
+    practices: {
+      breathingExercise: false,
+      witnessPresence: false,
+      mentalClearing: false,
+      selfInquiry: false,
+    }
   });
-  const [hasChanges, setHasChanges] = useState(false);
 
+  // Cache de la descripción de prácticas
+  const practiceDescriptions = useMemo(() => ({
+    breathing: TRANSFORMATION_SHORTCUTS.find(s => s.type === 'breathing')?.description || '',
+    witness: TRANSFORMATION_SHORTCUTS.find(s => s.type === 'witness')?.description || '',
+    clearing: TRANSFORMATION_SHORTCUTS.find(s => s.type === 'clearing')?.description || '',
+    inquiry: TRANSFORMATION_SHORTCUTS.find(s => s.type === 'inquiry')?.description || ''
+  }), []);
+
+  // Resetear el formulario cuando se cierra el modal
   useEffect(() => {
     if (!isOpen) {
-      setEvent('');
-      setEmotionalResponse('');
-      setInsights('');
-      setLevel('superficial');
-      setLimitingBelief('');
-      setNewPerspective('');
-      setPractices({
-        breathingExercise: false,
-        witnessPresence: false,
-        mentalClearing: false,
-        selfInquiry: false,
+      setFormData({
+        practiceId,  // Mantenemos el practiceId al resetear
+        event: '',
+        emotionalResponse: '',
+        insights: '',
+        level: 'superficial',
+        limitingBelief: '',
+        newPerspective: '',
+        practices: {
+          breathingExercise: false,
+          witnessPresence: false,
+          mentalClearing: false,
+          selfInquiry: false,
+        }
       });
-      setHasChanges(false);
     }
   }, [isOpen]);
 
-  const handleSubmit = useCallback((e: React.FormEvent) => {
-    e.preventDefault();
-    const isEmpty = !event && !emotionalResponse && !insights && !limitingBelief && !newPerspective &&
-      !Object.values(practices).some(Boolean);
+  useEffect(() => {
+    if (isOpen && date && practice) {
+      // Buscar si ya existe una reflexión para esta fecha
+      const existingReflection = practice.reflections?.[date];
 
-    // Verificar si el día es válido para editar
-    const currentDay = getCurrentDay();
-    const selectedDate = new Date(date).toISOString().split('T')[0];
-    
-    if (selectedDate > currentDay) {
-      alert('No puedes editar días futuros');
+      if (existingReflection) {
+        // Si existe, cargar los datos guardados
+        setFormData({
+          practiceId,
+          event: existingReflection.event.description || '',
+          emotionalResponse: existingReflection.event.emotionalResponse || '',
+          insights: existingReflection.contemplation.insights || '',
+          level: existingReflection.contemplation.level || 'superficial',
+          limitingBelief: existingReflection.transformation.limitingBelief || '',
+          newPerspective: existingReflection.transformation.newPerspective || '',
+          practices: existingReflection.practices || {
+            breathingExercise: false,
+            witnessPresence: false,
+            mentalClearing: false,
+            selfInquiry: false,
+          }
+        });
+      } else {
+        // Si no existe, resetear el formulario
+        setFormData({
+          practiceId,
+          event: '',
+          emotionalResponse: '',
+          insights: '',
+          level: 'superficial',
+          limitingBelief: '',
+          newPerspective: '',
+          practices: {
+            breathingExercise: false,
+            witnessPresence: false,
+            mentalClearing: false,
+            selfInquiry: false,
+          }
+        });
+      }
+    }
+  }, [isOpen, date, practice]);
+
+  const handleInputChange = useCallback((field: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  }, []);
+
+  const handlePracticeSelect = useCallback((type: 'breathing' | 'witness' | 'inquiry' | 'clearing') => {
+    setFormData(prev => {
+      const practiceMap = {
+        breathing: 'breathingExercise',
+        witness: 'witnessPresence',
+        inquiry: 'selfInquiry',
+        clearing: 'mentalClearing'
+      } as const;
+      
+      const practiceKey = practiceMap[type];
+      return {
+        ...prev,
+        practices: {
+          ...prev.practices,
+          [practiceKey]: !prev.practices[practiceKey]
+        }
+      };
+    });
+  }, []);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleSave();
+  };
+
+  const handleSave = () => {
+    // Validate required fields - check if at least one practice is selected or there's content
+    const hasSelectedPractices = Object.values(formData.practices).some(p => p);
+    const hasContent = Boolean(formData.event || formData.emotionalResponse || formData.insights || formData.limitingBelief || formData.newPerspective);
+
+    if (!hasSelectedPractices && !hasContent) {
+      console.warn('Please select at least one practice or provide some reflection content');
       return;
     }
 
-    onSave({
-      practiceId,
-      date,
+    // Validate date
+    if (!date || isNaN(new Date(date).getTime())) {
+      console.error('Invalid date provided');
+      return;
+    }
+
+    // Create the reflection data
+    const reflection = {
+      practiceId: formData.practiceId,
+      date: date,
       event: {
-        description: event,
-        emotionalResponse,
+        description: formData.event.trim(),
+        emotionalResponse: formData.emotionalResponse.trim(),
       },
       beliefs: {
         self: [],
@@ -110,44 +205,61 @@ export const ReflectionModal = memo(({ isOpen, onClose, date, practiceId, onSave
         life: [],
       },
       contemplation: {
-        level,
-        insights,
+        level: formData.level,
+        insights: formData.insights.trim(),
         question: '',
       },
       transformation: {
-        limitingBelief,
-        newPerspective,
+        limitingBelief: formData.limitingBelief.trim(),
+        newPerspective: formData.newPerspective.trim(),
       },
-      practices,
-      isEmpty,
-    });
+      practices: formData.practices,
+      isEmpty: !hasContent && !hasSelectedPractices,
+    };
 
-    setHasChanges(false);
-  }, [event, emotionalResponse, insights, limitingBelief, newPerspective, practices, practiceId, date, level, onSave]);
-
-  const handlePracticeSelect = useCallback((type: 'breathing' | 'witness' | 'inquiry' | 'clearing') => {
-    setPractices(prev => {
-      const newPractices = {
-        ...prev,
-        breathingExercise: type === 'breathing' ? !prev.breathingExercise : prev.breathingExercise,
-        witnessPresence: type === 'witness' ? !prev.witnessPresence : prev.witnessPresence,
-        selfInquiry: type === 'inquiry' ? !prev.selfInquiry : prev.selfInquiry,
-        mentalClearing: type === 'clearing' ? !prev.mentalClearing : prev.mentalClearing,
-      };
-      setHasChanges(true);
-      return newPractices;
-    });
-  }, []);
-
-  const handleClose = useCallback(() => {
-    if (hasChanges) {
-      if (window.confirm('¿Estás seguro de que quieres cerrar? Hay cambios sin guardar.')) {
-        onClose();
-      }
-    } else {
+    // Don't mark as completed if the reflection is empty
+    if (reflection.isEmpty) {
       onClose();
+      return;
     }
-  }, [hasChanges, onClose]);
+
+    // Ensure we have all required practice properties
+    const updatedPractice: Practice = {
+      ...practice,
+      id: practice.id,
+      type: practice.type,
+      name: practice.name,
+      description: practice.description,
+      color: practice.color,
+      duration: practice.duration,
+      startDate: practice.startDate,
+      progress: practice.progress,
+      currentStreak: practice.currentStreak,
+      longestStreak: practice.longestStreak,
+      observations: practice.observations,
+      reflections: {
+        ...(practice?.reflections || {}),
+        [date]: reflection
+      },
+      completedDates: Array.from(new Set([...(practice?.completedDates || []), date])).sort()
+    };
+
+    // Call both update functions
+    updatePractice(updatedPractice);
+    onSave(reflection);
+    onClose();
+  };
+
+  const [currentDay, setCurrentDay] = useState<string>(getCurrentDay());
+
+  // Update current day every minute to ensure it stays current
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentDay(getCurrentDay());
+    }, 60000); // Check every minute
+
+    return () => clearInterval(interval);
+  }, []);
 
   if (!isOpen) return null;
 
@@ -158,6 +270,46 @@ export const ReflectionModal = memo(({ isOpen, onClose, date, practiceId, onSave
     day: 'numeric'
   });
 
+  const getPracticeDescription = useCallback((type: 'breathing' | 'witness' | 'clearing' | 'inquiry') => {
+    return practiceDescriptions[type];
+  }, [practiceDescriptions]);
+
+  const renderPracticeOption = useCallback((
+    type: 'breathing' | 'witness' | 'clearing' | 'inquiry',
+    icon: React.ReactNode,
+    stateKey: keyof typeof formData.practices
+  ) => {
+    const description = getPracticeDescription(type);
+    const shortcut = TRANSFORMATION_SHORTCUTS.find(s => s.type === type);
+    
+    return (
+      <label 
+        key={type}
+        className={`relative flex cursor-pointer rounded-lg border p-4 group ${
+          formData.practices[stateKey] 
+            ? 'border-indigo-500 ring-2 ring-indigo-500' 
+            : 'border-gray-300 dark:border-gray-600'
+        }`}
+      >
+        <input
+          type="checkbox"
+          checked={formData.practices[stateKey]}
+          onChange={() => handlePracticeSelect(type)}
+          className="sr-only"
+        />
+        <div className="flex flex-col">
+          <span className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+            {icon}
+            {shortcut?.name}
+          </span>
+          <span className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            {description}
+          </span>
+        </div>
+      </label>
+    );
+  }, [formData.practices, handlePracticeSelect, getPracticeDescription]);
+
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <motion.div
@@ -165,7 +317,7 @@ export const ReflectionModal = memo(({ isOpen, onClose, date, practiceId, onSave
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 bg-black/50 dark:bg-black/70"
-        onClick={handleClose}
+        onClick={onClose}
       />
 
       <div className="flex min-h-screen items-center justify-center p-4">
@@ -187,7 +339,7 @@ export const ReflectionModal = memo(({ isOpen, onClose, date, practiceId, onSave
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              onClick={handleClose}
+              onClick={onClose}
               className="text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400 transition-colors rounded-lg p-1"
             >
               <X className="h-6 w-6" />
@@ -196,120 +348,14 @@ export const ReflectionModal = memo(({ isOpen, onClose, date, practiceId, onSave
 
           <div className="flex-1 overflow-y-auto max-h-[calc(85vh-8rem)]">
             <form id="reflectionForm" onSubmit={handleSubmit} className="p-6 space-y-6">
+              <p>Current Day: {currentDay}</p>
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Prácticas Realizadas</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setPractices(prev => ({
-                      ...prev,
-                      breathingExercise: !prev.breathingExercise
-                    }))}
-                    className={`flex items-center justify-center p-4 rounded-lg border-2 transition-all duration-200 ${
-                      practices.breathingExercise
-                        ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
-                        : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800'
-                    }`}
-                  >
-                    <div className="text-center">
-                      <BookOpen className={`h-6 w-6 mx-auto mb-2 ${
-                        practices.breathingExercise
-                          ? 'text-indigo-500'
-                          : 'text-gray-400 dark:text-gray-500'
-                      }`} />
-                      <span className={`text-sm font-medium ${
-                        practices.breathingExercise
-                          ? 'text-indigo-700 dark:text-indigo-300'
-                          : 'text-gray-600 dark:text-gray-400'
-                      }`}>
-                        Ejercicios de Respiración
-                      </span>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setPractices(prev => ({
-                      ...prev,
-                      witnessPresence: !prev.witnessPresence
-                    }))}
-                    className={`flex items-center justify-center p-4 rounded-lg border-2 transition-all duration-200 ${
-                      practices.witnessPresence
-                        ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
-                        : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800'
-                    }`}
-                  >
-                    <div className="text-center">
-                      <Brain className={`h-6 w-6 mx-auto mb-2 ${
-                        practices.witnessPresence
-                          ? 'text-indigo-500'
-                          : 'text-gray-400 dark:text-gray-500'
-                      }`} />
-                      <span className={`text-sm font-medium ${
-                        practices.witnessPresence
-                          ? 'text-indigo-700 dark:text-indigo-300'
-                          : 'text-gray-600 dark:text-gray-400'
-                      }`}>
-                        Presencia Testigo
-                      </span>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setPractices(prev => ({
-                      ...prev,
-                      mentalClearing: !prev.mentalClearing
-                    }))}
-                    className={`flex items-center justify-center p-4 rounded-lg border-2 transition-all duration-200 ${
-                      practices.mentalClearing
-                        ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
-                        : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800'
-                    }`}
-                  >
-                    <div className="text-center">
-                      <Flower2 className={`h-6 w-6 mx-auto mb-2 ${
-                        practices.mentalClearing
-                          ? 'text-indigo-500'
-                          : 'text-gray-400 dark:text-gray-500'
-                      }`} />
-                      <span className={`text-sm font-medium ${
-                        practices.mentalClearing
-                          ? 'text-indigo-700 dark:text-indigo-300'
-                          : 'text-gray-600 dark:text-gray-400'
-                      }`}>
-                        Limpieza Mental
-                      </span>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setPractices(prev => ({
-                      ...prev,
-                      selfInquiry: !prev.selfInquiry
-                    }))}
-                    className={`flex items-center justify-center p-4 rounded-lg border-2 transition-all duration-200 ${
-                      practices.selfInquiry
-                        ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
-                        : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800'
-                    }`}
-                  >
-                    <div className="text-center">
-                      <AlertCircle className={`h-6 w-6 mx-auto mb-2 ${
-                        practices.selfInquiry
-                          ? 'text-indigo-500'
-                          : 'text-gray-400 dark:text-gray-500'
-                      }`} />
-                      <span className={`text-sm font-medium ${
-                        practices.selfInquiry
-                          ? 'text-indigo-700 dark:text-indigo-300'
-                          : 'text-gray-600 dark:text-gray-400'
-                      }`}>
-                        Auto-indagación
-                      </span>
-                    </div>
-                  </button>
+                  {renderPracticeOption('breathing', <BookOpen className="h-6 w-6" />, 'breathingExercise')}
+                  {renderPracticeOption('witness', <Brain className="h-6 w-6" />, 'witnessPresence')}
+                  {renderPracticeOption('clearing', <Flower2 className="h-6 w-6" />, 'mentalClearing')}
+                  {renderPracticeOption('inquiry', <AlertCircle className="h-6 w-6" />, 'selfInquiry')}
                 </div>
               </div>
 
@@ -319,8 +365,8 @@ export const ReflectionModal = memo(({ isOpen, onClose, date, practiceId, onSave
                 </label>
                 <textarea
                   id="event"
-                  value={event}
-                  onChange={(e) => setEvent(e.target.value)}
+                  value={formData.event}
+                  onChange={(e) => handleInputChange('event', e.target.value)}
                   rows={2}
                   className="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   placeholder="Describe el evento o situación que desencadenó la práctica..."
@@ -333,8 +379,8 @@ export const ReflectionModal = memo(({ isOpen, onClose, date, practiceId, onSave
                 </label>
                 <textarea
                   id="emotional-response"
-                  value={emotionalResponse}
-                  onChange={(e) => setEmotionalResponse(e.target.value)}
+                  value={formData.emotionalResponse}
+                  onChange={(e) => handleInputChange('emotionalResponse', e.target.value)}
                   rows={2}
                   className="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   placeholder="¿Qué emociones surgieron?"
@@ -348,7 +394,7 @@ export const ReflectionModal = memo(({ isOpen, onClose, date, practiceId, onSave
                 </label>
                 <div className="mt-2 grid grid-cols-2 gap-3">
                   <label className={`relative flex cursor-pointer rounded-lg border p-4 ${
-                    level === 'superficial'
+                    formData.level === 'superficial'
                       ? 'border-indigo-500 ring-2 ring-indigo-500'
                       : 'border-gray-300 dark:border-gray-600'
                   }`}>
@@ -356,8 +402,8 @@ export const ReflectionModal = memo(({ isOpen, onClose, date, practiceId, onSave
                       type="radio"
                       name="contemplation-level"
                       value="superficial"
-                      checked={level === 'superficial'}
-                      onChange={(e) => setLevel(e.target.value as 'superficial' | 'deep')}
+                      checked={formData.level === 'superficial'}
+                      onChange={(e) => handleInputChange('level', e.target.value)}
                       className="sr-only"
                     />
                     <div className="flex flex-col">
@@ -370,7 +416,7 @@ export const ReflectionModal = memo(({ isOpen, onClose, date, practiceId, onSave
                     </div>
                   </label>
                   <label className={`relative flex cursor-pointer rounded-lg border p-4 ${
-                    level === 'deep'
+                    formData.level === 'deep'
                       ? 'border-indigo-500 ring-2 ring-indigo-500'
                       : 'border-gray-300 dark:border-gray-600'
                   }`}>
@@ -378,8 +424,8 @@ export const ReflectionModal = memo(({ isOpen, onClose, date, practiceId, onSave
                       type="radio"
                       name="contemplation-level"
                       value="deep"
-                      checked={level === 'deep'}
-                      onChange={(e) => setLevel(e.target.value as 'superficial' | 'deep')}
+                      checked={formData.level === 'deep'}
+                      onChange={(e) => handleInputChange('level', e.target.value)}
                       className="sr-only"
                     />
                     <div className="flex flex-col">
@@ -401,8 +447,8 @@ export const ReflectionModal = memo(({ isOpen, onClose, date, practiceId, onSave
                 </label>
                 <textarea
                   id="insights"
-                  value={insights}
-                  onChange={(e) => setInsights(e.target.value)}
+                  value={formData.insights}
+                  onChange={(e) => handleInputChange('insights', e.target.value)}
                   rows={3}
                   className="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   placeholder="¿Qué has descubierto durante la práctica?"
@@ -416,8 +462,8 @@ export const ReflectionModal = memo(({ isOpen, onClose, date, practiceId, onSave
                 </label>
                 <textarea
                   id="limiting-belief"
-                  value={limitingBelief}
-                  onChange={(e) => setLimitingBelief(e.target.value)}
+                  value={formData.limitingBelief}
+                  onChange={(e) => handleInputChange('limitingBelief', e.target.value)}
                   rows={2}
                   className="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   placeholder="¿Qué creencia limitante has identificado?"
@@ -431,8 +477,8 @@ export const ReflectionModal = memo(({ isOpen, onClose, date, practiceId, onSave
                 </label>
                 <textarea
                   id="new-perspective"
-                  value={newPerspective}
-                  onChange={(e) => setNewPerspective(e.target.value)}
+                  value={formData.newPerspective}
+                  onChange={(e) => handleInputChange('newPerspective', e.target.value)}
                   rows={2}
                   className="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   placeholder="¿Qué nueva perspectiva has descubierto?"
@@ -444,7 +490,7 @@ export const ReflectionModal = memo(({ isOpen, onClose, date, practiceId, onSave
           <div className="border-t border-gray-100 dark:border-gray-700 p-6 flex justify-end space-x-4">
             <button
               type="button"
-              onClick={handleClose}
+              onClick={onClose}
               className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
               Cancelar
@@ -453,7 +499,6 @@ export const ReflectionModal = memo(({ isOpen, onClose, date, practiceId, onSave
               type="submit"
               form="reflectionForm"
               className="inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              disabled={!hasChanges}
             >
               Guardar
             </button>

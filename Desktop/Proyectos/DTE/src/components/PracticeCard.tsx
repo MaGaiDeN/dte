@@ -28,16 +28,33 @@ export const PracticeCard = forwardRef<HTMLDivElement, PracticeCardProps>(({ pra
   };
 
   const isDateCompleted = (date: string) => {
-    return practice.completedDates.includes(date);
+    if (!practice.completedDates) return false;
+    return Array.isArray(practice.completedDates) 
+      ? practice.completedDates.includes(date)
+      : Object.keys(practice.completedDates).includes(date);
   };
 
   const isDateClickable = (dateStr: string, index: number) => {
-    // Si la fecha ya está completada, no debería ser clickeable
-    if (isDateCompleted(dateStr)) {
+    // Obtener la fecha actual (considerando que un día termina a las 4 AM del día siguiente)
+    const now = new Date();
+    if (now.getHours() < 4) {
+      now.setDate(now.getDate() - 1);
+    }
+    now.setHours(0, 0, 0, 0);
+
+    // Verificar si la fecha del botón es futura
+    const buttonDate = new Date(dateStr);
+    buttonDate.setHours(0, 0, 0, 0);
+    if (buttonDate > now) {
       return false;
     }
 
-    // Si no hay fechas completadas, solo permitir el día 1
+    // Si es un día completado, permitir editarlo
+    if (isDateCompleted(dateStr)) {
+      return true;
+    }
+
+    // Si no hay fechas completadas, solo permitir el día 1 si su fecha ya está disponible
     if (practice.completedDates.length === 0) {
       return index === 0;
     }
@@ -52,7 +69,7 @@ export const PracticeCard = forwardRef<HTMLDivElement, PracticeCardProps>(({ pra
     const maxCompletedDay = Math.max(...completedDays);
     const currentDay = index + 1;
 
-    // Solo permitir clickear el siguiente día después del último completado
+    // Permitir clickear el siguiente día después del último completado
     return currentDay === maxCompletedDay + 1;
   };
 

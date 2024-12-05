@@ -167,6 +167,8 @@ function App() {
             onClose={() => setIsReflectionModalOpen(false)}
             date={selectedDate}
             practiceId={selectedPracticeId}
+            practice={practices.find(p => p.id === selectedPracticeId)}
+            updatePractice={(updatedPractice) => dispatch(updatePractice(updatedPractice))}
             onSave={handleSaveReflection}
           />
         )}

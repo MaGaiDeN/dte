@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { BookOpen, Brain } from 'lucide-react';
-import type { Reflection } from '../types/Reflection';
+import type { Reflection } from '../types';
 
 interface ReflectionFormProps {
   onSaveReflection: (reflection: Omit<Reflection, 'id' | 'date'>) => void;
@@ -19,23 +18,36 @@ export function ReflectionForm({ onSaveReflection }: ReflectionFormProps) {
     mentalClearing: false,
     selfInquiry: false,
   });
+  const [beliefs, setBeliefs] = useState({
+    self: [] as string[],
+    others: [] as string[],
+    life: [] as string[],
+  });
+  const [question, setQuestion] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSaveReflection({
+
+    // Validate required fields
+    if (!events && !emotions && !deepObservation) {
+      console.warn('Please fill at least one reflection field');
+      return;
+    }
+
+    const reflection = {
       event: {
         description: events,
         emotionalResponse: emotions
       },
       beliefs: {
-        self: [],
-        others: [],
-        life: []
+        self: beliefs.self,
+        others: beliefs.others,
+        life: beliefs.life
       },
       contemplation: {
         level: contemplationLevel,
         insights: deepObservation,
-        question: ''
+        question: question
       },
       transformation: {
         limitingBelief: limitingBeliefs,
@@ -46,27 +58,42 @@ export function ReflectionForm({ onSaveReflection }: ReflectionFormProps) {
         witnessPresence: mindfulnessPractices.witnessPresence,
         mentalClearing: mindfulnessPractices.mentalClearing,
         selfInquiry: mindfulnessPractices.selfInquiry
-      }
-    });
-    
-    // Reset form
-    setEvents('');
-    setEmotions('');
-    setDeepObservation('');
-    setLimitingBeliefs('');
-    setTransformation('');
-    setContemplationLevel('superficial');
-    setMindfulnessPractices({
-      breathingExercises: false,
-      witnessPresence: false,
-      mentalClearing: false,
-      selfInquiry: false,
-    });
+      },
+      isEmpty: !events && !emotions && !deepObservation, // Added the isEmpty property
+    };
+
+    // Call onSaveReflection and wait for confirmation
+    try {
+      onSaveReflection(reflection);
+      
+      // Reset form after successful save
+      setEvents('');
+      setEmotions('');
+      setDeepObservation('');
+      setLimitingBeliefs('');
+      setTransformation('');
+      setContemplationLevel('superficial');
+      setMindfulnessPractices({
+        breathingExercises: false,
+        witnessPresence: false,
+        mentalClearing: false,
+        selfInquiry: false,
+      });
+      setBeliefs({
+        self: [],
+        others: [],
+        life: [],
+      });
+      setQuestion('');
+    } catch (error) {
+      console.error('Failed to save reflection:', error);
+    }
   };
 
   // Rest of the component remains the same...
   return (
-    // Component JSX remains unchanged
-    <div>Existing JSX</div>
+    <form onSubmit={handleSubmit}>
+      <div>Existing JSX</div>
+    </form>
   );
 }
