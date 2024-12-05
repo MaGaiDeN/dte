@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { X, BookOpen, Brain, Flower2, AlertCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { TRANSFORMATION_SHORTCUTS } from '../types/Reflection';
@@ -88,30 +89,51 @@ export function ReflectionModal({ isOpen, onClose, date, practiceId, onSave }: R
 
   if (!isOpen) return null;
 
+  const formattedDate = new Date(date).toLocaleDateString('es-ES', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+
   return (
-    <div className="fixed inset-0 z-50">
-      <div className="fixed inset-0 bg-black/50 dark:bg-black/70" onClick={onClose} />
-      <div className="fixed inset-0 flex items-center justify-center p-4">
-        <div className="relative w-full max-w-2xl max-h-[85vh] bg-white dark:bg-gray-800 rounded-xl shadow-xl flex flex-col">
-          <div className="flex justify-between items-center p-6 border-b border-gray-100 dark:border-gray-700">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-              Reflexión del {new Date(date).toLocaleDateString('es-ES', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}
-            </h2>
-            <button
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/50 dark:bg-black/70"
+        onClick={onClose}
+      />
+
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0, y: 20 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.95, opacity: 0, y: 20 }}
+          transition={{ type: "spring", duration: 0.3 }}
+          className="relative w-full max-w-2xl max-h-[85vh] bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden"
+        >
+          <div className="flex justify-between items-center border-b border-gray-100 dark:border-gray-700 p-6">
+            <motion.h2
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              className="text-xl font-semibold text-gray-900 dark:text-gray-100"
+            >
+              Reflexión del {formattedDate}
+            </motion.h2>
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
               onClick={onClose}
               className="text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400 transition-colors rounded-lg p-1"
             >
               <X className="h-6 w-6" />
-            </button>
+            </motion.button>
           </div>
 
-          <div className="flex-1 overflow-y-auto">
-            <form id="reflectionForm" onSubmit={handleSubmit} className="p-6 space-y-6">
+          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            <form id="reflectionForm" onSubmit={handleSubmit}>
               <div className="space-y-4">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Prácticas Realizadas
@@ -304,7 +326,7 @@ export function ReflectionModal({ isOpen, onClose, date, practiceId, onSave }: R
               Guardar Reflexión
             </button>
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

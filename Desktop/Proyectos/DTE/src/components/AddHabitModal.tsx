@@ -1,7 +1,6 @@
-import * as Dialog from '@radix-ui/react-dialog';
-import { AnimatePresence, motion } from 'framer-motion';
-import { X, Plus, Save } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { X, Plus, Save } from 'lucide-react';
 import { NewPracticeForm, PracticeDuration, Practice } from '../types/Habit';
 
 interface AddHabitModalProps {
@@ -89,12 +88,29 @@ export function AddHabitModal({ isOpen, onClose, onAdd, onEdit, editPractice }: 
   if (!isOpen) return null;
 
   return (
-    <Dialog.Root open={isOpen} onOpenChange={onClose}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/50 dark:bg-black/70 z-50" />
-        <Dialog.Content className="fixed left-[50%] top-[50%] z-50 w-full sm:w-[95vw] max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 bg-white dark:bg-gray-800 shadow-xl rounded-xl max-h-[90vh] sm:max-h-[85vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/50 dark:bg-black/70"
+        onClick={onClose}
+      />
+
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0, y: 20 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.95, opacity: 0, y: 20 }}
+          transition={{ type: "spring", duration: 0.3 }}
+          className="w-full max-w-lg bg-white dark:bg-gray-800 shadow-xl rounded-xl overflow-hidden relative"
+        >
           <div className="flex justify-between items-center border-b border-gray-100 dark:border-gray-700 p-4 sm:p-6">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+            <motion.h2 
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2"
+            >
               {editPractice ? (
                 <>
                   <Save className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
@@ -106,22 +122,25 @@ export function AddHabitModal({ isOpen, onClose, onAdd, onEdit, editPractice }: 
                   Nueva Práctica
                 </>
               )}
-            </h2>
-            <button
+            </motion.h2>
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
               onClick={onClose}
               className="text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400 transition-colors rounded-lg p-1"
             >
               <X className="h-5 w-5 sm:h-6 sm:w-6" />
-            </button>
+            </motion.button>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+          <div className="p-4 sm:p-6 overflow-y-auto max-h-[calc(85vh-4rem)]">
             <form id="habitForm" onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label htmlFor="practice-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Nombre de la práctica
                 </label>
-                <input
+                <motion.input
+                  whileFocus={{ scale: 1.01 }}
                   type="text"
                   id="practice-name"
                   value={form.name}
@@ -135,7 +154,8 @@ export function AddHabitModal({ isOpen, onClose, onAdd, onEdit, editPractice }: 
                 <label htmlFor="practice-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Descripción (opcional)
                 </label>
-                <textarea
+                <motion.textarea
+                  whileFocus={{ scale: 1.01 }}
                   id="practice-description"
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
@@ -149,10 +169,16 @@ export function AddHabitModal({ isOpen, onClose, onAdd, onEdit, editPractice }: 
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Tipo de Práctica
                 </label>
-                <div className="grid grid-cols-1 gap-3">
+                <motion.div 
+                  className="grid grid-cols-1 gap-3"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
                   {PRACTICE_TYPES.map((type) => (
-                    <label
+                    <motion.label
                       key={type.value}
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.99 }}
                       className={`relative flex cursor-pointer rounded-lg border p-4 hover:border-indigo-300 ${
                         form.type === type.value
                           ? 'border-indigo-500 ring-2 ring-indigo-500'
@@ -175,19 +201,25 @@ export function AddHabitModal({ isOpen, onClose, onAdd, onEdit, editPractice }: 
                           {type.description}
                         </span>
                       </div>
-                    </label>
+                    </motion.label>
                   ))}
-                </div>
+                </motion.div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Duración del Compromiso
                 </label>
-                <div className="grid grid-cols-1 gap-3">
+                <motion.div 
+                  className="grid grid-cols-1 gap-3"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
                   {DURATION_OPTIONS.map((option) => (
-                    <label
+                    <motion.label
                       key={option.value}
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.99 }}
                       className={`relative flex cursor-pointer rounded-lg border p-4 hover:border-indigo-300 ${
                         form.duration === option.value
                           ? 'border-indigo-500 ring-2 ring-indigo-500'
@@ -210,16 +242,17 @@ export function AddHabitModal({ isOpen, onClose, onAdd, onEdit, editPractice }: 
                           {option.description}
                         </span>
                       </div>
-                    </label>
+                    </motion.label>
                   ))}
-                </div>
+                </motion.div>
               </div>
 
               <div>
                 <label htmlFor="practice-observations" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Observaciones adicionales
                 </label>
-                <textarea
+                <motion.textarea
+                  whileFocus={{ scale: 1.01 }}
                   id="practice-observations"
                   value={form.observations}
                   onChange={(e) => setForm({ ...form, observations: e.target.value })}
@@ -232,14 +265,18 @@ export function AddHabitModal({ isOpen, onClose, onAdd, onEdit, editPractice }: 
           </div>
 
           <div className="border-t border-gray-100 dark:border-gray-700 p-4 sm:p-6 flex flex-col sm:flex-row justify-end gap-3">
-            <button
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               type="button"
               onClick={onClose}
               className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-200 w-full sm:w-auto"
             >
               Cancelar
-            </button>
-            <button
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               type="submit"
               form="habitForm"
               className="px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 transition-colors w-full sm:w-auto"
@@ -257,10 +294,10 @@ export function AddHabitModal({ isOpen, onClose, onAdd, onEdit, editPractice }: 
                   </>
                 )}
               </span>
-            </button>
+            </motion.button>
           </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+        </motion.div>
+      </div>
+    </div>
   );
 }

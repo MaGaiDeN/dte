@@ -1,5 +1,7 @@
+import { motion } from 'framer-motion';
 import { Trash2, Settings } from 'lucide-react';
 import type { Practice } from '../types/Habit';
+import { fadeIn, progressBarVariants } from '../constants/animations';
 import * as Progress from '@radix-ui/react-progress';
 
 interface PracticeCardProps {
@@ -55,39 +57,66 @@ export function PracticeCard({ practice, onDelete, onClick, onEdit }: PracticeCa
   const remainingDays = getRemainingDays();
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:hover:border-gray-600 transition-all duration-200 overflow-hidden">
+    <motion.div
+      layout
+      variants={fadeIn}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:hover:border-gray-600 transition-all duration-200 overflow-hidden"
+    >
       <div 
         className="p-4 sm:p-6 rounded-t-xl"
         style={{ background: `linear-gradient(to right, ${practice.color}CC, ${practice.color}99)` }}
       >
         <div className="flex justify-between items-start">
           <div>
-            <h3 className="text-base sm:text-lg font-medium text-white">
+            <motion.h3
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="text-base sm:text-lg font-medium text-white"
+            >
               {practice.name}
-            </h3>
-            <p className="mt-1 text-xs sm:text-sm text-white/80">
+            </motion.h3>
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mt-1 text-xs sm:text-sm text-white/80"
+            >
               {practice.description}
-            </p>
+            </motion.p>
             <div className="mt-2 flex items-center space-x-3">
-              <p className="text-xs sm:text-sm text-white/90">
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-xs sm:text-sm text-white/90"
+              >
                 {remainingDays > 0 
                   ? `${remainingDays} días restantes` 
                   : "Período completado"}
-              </p>
+              </motion.p>
               <span className="text-xs sm:text-sm text-white/90">•</span>
-              <p className="text-xs sm:text-sm text-white/90">
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-xs sm:text-sm text-white/90"
+              >
                 {practice.duration} días en total
-              </p>
+              </motion.p>
             </div>
           </div>
           <div className="flex space-x-2">
-            <button
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => onEdit(practice)}
               className="p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
             >
               <Settings className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
-            <button
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
               onClick={(e) => {
                 e.stopPropagation();
                 if (window.confirm('¿Estás seguro de que quieres eliminar esta práctica?')) {
@@ -97,7 +126,7 @@ export function PracticeCard({ practice, onDelete, onClick, onEdit }: PracticeCa
               className="p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
             >
               <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
+            </motion.button>
           </div>
         </div>
 
@@ -124,7 +153,9 @@ export function PracticeCard({ practice, onDelete, onClick, onEdit }: PracticeCa
 
             return (
               <div key={date} className="relative group">
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => clickable && onClick(practice.id, date)}
                   disabled={!clickable}
                   className={`
@@ -140,7 +171,7 @@ export function PracticeCard({ practice, onDelete, onClick, onEdit }: PracticeCa
                   `}
                 >
                   {dayNumber}
-                </button>
+                </motion.button>
 
                 <div 
                   className="
@@ -160,6 +191,6 @@ export function PracticeCard({ practice, onDelete, onClick, onEdit }: PracticeCa
           })}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

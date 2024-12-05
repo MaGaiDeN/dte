@@ -1,44 +1,29 @@
-import { useState, useEffect } from 'react';
-import { Plus } from 'lucide-react';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import type { Practice } from './types/Habit';
 import { AddHabitModal } from './components/AddHabitModal';
 import { ReflectionModal } from './components/ReflectionModal';
 import { PracticeStats } from './components/PracticeStats';
 import { PracticeCard } from './components/PracticeCard';
 import { Header } from './components/Header';
-import { DEFAULT_PRACTICES } from './constants/defaultPractices';
+import { NotificationSettings } from './components/NotificationSettings';
+import { useAppSelector, useAppDispatch } from './store/hooks';
+import { resetPractices, deletePractice, addPractice, updatePractice } from './store/practicesSlice';
+import { staggerChildren } from './constants/animations';
 import chroma from 'chroma-js';
 
 function App() {
-  const [practices, setPractices] = useState<Practice[]>([]);
+  const practices = useAppSelector(state => state.practices.items);
+  const dispatch = useAppDispatch();
+  
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedPracticeId, setSelectedPracticeId] = useState('');
   const [isReflectionModalOpen, setIsReflectionModalOpen] = useState(false);
   const [editingPractice, setEditingPractice] = useState<Practice | null>(null);
 
-  useEffect(() => {
-    const savedPractices = localStorage.getItem('practices');
-    if (savedPractices) {
-      setPractices(JSON.parse(savedPractices));
-    } else {
-      setPractices(DEFAULT_PRACTICES);
-      localStorage.setItem('practices', JSON.stringify(DEFAULT_PRACTICES));
-    }
-  }, []);
-
   const handleReset = () => {
-    const today = new Date().toISOString().split('T')[0];
-    const resetPractices = DEFAULT_PRACTICES.map(practice => ({
-      ...practice,
-      startDate: today,
-      completedDates: [],
-      progress: 0,
-      currentStreak: 0,
-      longestStreak: 0
-    }));
-    setPractices(resetPractices);
-    localStorage.setItem('practices', JSON.stringify(resetPractices));
+    dispatch(resetPractices());
   };
 
   const handleEditPractice = (practice: Practice) => {
@@ -54,96 +39,109 @@ function App() {
       }} />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        <div className="mb-6 sm:mb-8">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6">
+          <NotificationSettings />
+        </motion.div>
+        
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 sm:mb-8">
           <PracticeStats practices={practices} />
-        </div>
+        </motion.div>
 
-        <div className="grid grid-cols-1 gap-4 sm:gap-6">
-          {practices.map((practice) => (
-            <PracticeCard
-              key={practice.id}
-              practice={practice}
-              onDelete={(id) => {
-                const newPractices = practices.filter((p) => p.id !== id);
-                setPractices(newPractices);
-                localStorage.setItem('practices', JSON.stringify(newPractices));
-              }}
-              onClick={(practiceId, date) => {
-                setSelectedPracticeId(practiceId);
-                setSelectedDate(date);
-                setIsReflectionModalOpen(true);
-              }}
-              onEdit={handleEditPractice}
-            />
-          ))}
-        </div>
+        <motion.div 
+          variants={staggerChildren}
+          initial="initial"
+          animate="animate"
+          className="grid grid-cols-1 gap-4 sm:gap-6">
+          <AnimatePresence mode="popLayout">
+            {practices.map((practice) => (
+              <PracticeCard
+                key={practice.id}
+                practice={practice}
+                onDelete={(id) => {
+                  dispatch(deletePractice(id));
+                }}
+                onClick={(practiceId, date) => {
+                  setSelectedPracticeId(practiceId);
+                  setSelectedDate(date);
+                  setIsReflectionModalOpen(true);
+                }}
+                onEdit={handleEditPractice}
+              />
+            ))}
+          </AnimatePresence>
+        </motion.div>
       </main>
 
-      <AddHabitModal
-        isOpen={isAddModalOpen}
-        onClose={() => {
-          setIsAddModalOpen(false);
-          setEditingPractice(null);
-        }}
-        editPractice={editingPractice}
-        onAdd={(form) => {
-          const newPractice: Practice = {
-            id: crypto.randomUUID(),
-            type: form.type,
-            name: form.name,
-            description: form.description,
-            color: chroma.random().hex(),
-            progress: 0,
-            completedDates: [],
-            currentStreak: 0,
-            longestStreak: 0,
-            duration: form.duration,
-            startDate: new Date().toISOString().split('T')[0]
-          };
-          const newPractices = [...practices, newPractice];
-          setPractices(newPractices);
-          localStorage.setItem('practices', JSON.stringify(newPractices));
-        }}
-        onEdit={(updatedPractice) => {
-          const newPractices = practices.map((p) =>
-            p.id === updatedPractice.id ? updatedPractice : p
-          );
-          setPractices(newPractices);
-          localStorage.setItem('practices', JSON.stringify(newPractices));
-        }}
-      />
+      <AnimatePresence>
+        {isAddModalOpen && (
+          <AddHabitModal
+            isOpen={isAddModalOpen}
+            onClose={() => {
+              setIsAddModalOpen(false);
+              setEditingPractice(null);
+            }}
+            editPractice={editingPractice}
+            onAdd={(form) => {
+              const newPractice: Practice = {
+                id: crypto.randomUUID(),
+                type: form.type,
+                name: form.name,
+                description: form.description,
+                color: chroma.random().hex(),
+                progress: 0,
+                completedDates: [],
+                currentStreak: 0,
+                longestStreak: 0,
+                duration: form.duration,
+                startDate: new Date().toISOString().split('T')[0]
+              };
+              dispatch(addPractice(newPractice));
+            }}
+            onEdit={(updatedPractice) => {
+              dispatch(updatePractice(updatedPractice));
+            }}
+          />
+        )}
+      </AnimatePresence>
 
-      <ReflectionModal
-        isOpen={isReflectionModalOpen}
-        onClose={() => setIsReflectionModalOpen(false)}
-        date={selectedDate}
-        practiceId={selectedPracticeId}
-        onSave={(reflection) => {
-          const practiceIndex = practices.findIndex((p) => p.id === reflection.practiceId);
-          if (practiceIndex === -1) return;
+      <AnimatePresence>
+        {isReflectionModalOpen && (
+          <ReflectionModal
+            isOpen={isReflectionModalOpen}
+            onClose={() => setIsReflectionModalOpen(false)}
+            date={selectedDate}
+            practiceId={selectedPracticeId}
+            onSave={(reflection) => {
+              const practice = practices.find((p) => p.id === reflection.practiceId);
+              if (!practice) return;
 
-          const newPractices = [...practices];
-          const practice = newPractices[practiceIndex];
+              const updatedPractice = { ...practice };
+              
+              if (!reflection.isEmpty) {
+                if (!updatedPractice.completedDates.includes(reflection.date)) {
+                  updatedPractice.completedDates = [...updatedPractice.completedDates, reflection.date].sort();
+                }
+              } else {
+                updatedPractice.completedDates = updatedPractice.completedDates.filter(
+                  (date) => date !== reflection.date
+                );
+              }
 
-          if (!reflection.isEmpty) {
-            if (!practice.completedDates.includes(reflection.date)) {
-              practice.completedDates.push(reflection.date);
-              practice.completedDates.sort();
-            }
-          } else {
-            practice.completedDates = practice.completedDates.filter(
-              (date) => date !== reflection.date
-            );
-          }
+              const totalDays = updatedPractice.duration;
+              const completedDays = updatedPractice.completedDates.length;
+              updatedPractice.progress = (completedDays / totalDays) * 100;
 
-          const totalDays = practice.duration;
-          const completedDays = practice.completedDates.length;
-          practice.progress = (completedDays / totalDays) * 100;
-
-          setPractices(newPractices);
-          localStorage.setItem('practices', JSON.stringify(newPractices));
-        }}
-      />
+              dispatch(updatePractice(updatedPractice));
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

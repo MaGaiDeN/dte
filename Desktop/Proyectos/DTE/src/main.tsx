@@ -1,5 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { Provider } from 'react-redux'
+import { store } from './store'
 import App from './App.tsx'
 import { ThemeProvider } from './contexts/ThemeContext'
 import './index.css'
@@ -9,8 +11,10 @@ if (!rootElement) throw new Error('Failed to find the root element');
 
 createRoot(rootElement).render(
   <StrictMode>
-    <ThemeProvider>
-      <App />
-    </ThemeProvider>
+    <Provider store={store}>
+      <ThemeProvider>
+        <App />
+      </ThemeProvider>
+    </Provider>
   </StrictMode>
 )
