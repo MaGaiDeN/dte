@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Practice } from './types/Habit';
 import { AddHabitModal } from './components/AddHabitModal';
 import { ReflectionModal } from './components/ReflectionModal';
-import { PracticeStats } from './components/PracticeStats';
+import { StatsModal } from './components/StatsModal';
 import { PracticeCard } from './components/PracticeCard';
 import { Header } from './components/Header';
 import { NotificationSettings } from './components/NotificationSettings';
@@ -17,6 +17,7 @@ function App() {
   const dispatch = useAppDispatch();
   
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedPracticeId, setSelectedPracticeId] = useState('');
   const [isReflectionModalOpen, setIsReflectionModalOpen] = useState(false);
@@ -31,12 +32,68 @@ function App() {
     setIsAddModalOpen(true);
   };
 
+  const handleSaveReflection = useCallback((reflection: {
+    practiceId: string;
+    date: string;
+    event: {
+      description: string;
+      emotionalResponse: string;
+    };
+    beliefs: {
+      self: string[];
+      others: string[];
+      life: string[];
+    };
+    contemplation: {
+      level: 'superficial' | 'deep';
+      insights: string;
+      question: string;
+    };
+    transformation: {
+      limitingBelief: string;
+      newPerspective: string;
+      doorMoment?: string;
+    };
+    practices: {
+      breathingExercise: boolean;
+      witnessPresence: boolean;
+      mentalClearing: boolean;
+      selfInquiry: boolean;
+    };
+    isEmpty: boolean;
+  }) => {
+    const practice = practices.find((p) => p.id === reflection.practiceId);
+    if (!practice) return;
+
+    const updatedPractice = { ...practice };
+    
+    if (!reflection.isEmpty) {
+      if (!updatedPractice.completedDates.includes(reflection.date)) {
+        updatedPractice.completedDates = [...updatedPractice.completedDates, reflection.date].sort();
+      }
+    } else {
+      updatedPractice.completedDates = updatedPractice.completedDates.filter(
+        (date) => date !== reflection.date
+      );
+    }
+
+    const totalDays = updatedPractice.duration;
+    const completedDays = updatedPractice.completedDates.length;
+    updatedPractice.progress = (completedDays / totalDays) * 100;
+
+    dispatch(updatePractice(updatedPractice));
+  }, [practices, dispatch]);
+
   return (
     <div className="min-h-screen bg-light-primary dark:bg-gray-900 transition-colors duration-200">
-      <Header onReset={handleReset} onNewPractice={() => {
-        setEditingPractice(null);
-        setIsAddModalOpen(true);
-      }} />
+      <Header 
+        onReset={handleReset} 
+        onNewPractice={() => {
+          setEditingPractice(null);
+          setIsAddModalOpen(true);
+        }}
+        onShowStats={() => setIsStatsModalOpen(true)}
+      />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <motion.div 
@@ -44,13 +101,6 @@ function App() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-6">
           <NotificationSettings />
-        </motion.div>
-        
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6 sm:mb-8">
-          <PracticeStats practices={practices} />
         </motion.div>
 
         <motion.div 
@@ -117,28 +167,17 @@ function App() {
             onClose={() => setIsReflectionModalOpen(false)}
             date={selectedDate}
             practiceId={selectedPracticeId}
-            onSave={(reflection) => {
-              const practice = practices.find((p) => p.id === reflection.practiceId);
-              if (!practice) return;
+            onSave={handleSaveReflection}
+          />
+        )}
+      </AnimatePresence>
 
-              const updatedPractice = { ...practice };
-              
-              if (!reflection.isEmpty) {
-                if (!updatedPractice.completedDates.includes(reflection.date)) {
-                  updatedPractice.completedDates = [...updatedPractice.completedDates, reflection.date].sort();
-                }
-              } else {
-                updatedPractice.completedDates = updatedPractice.completedDates.filter(
-                  (date) => date !== reflection.date
-                );
-              }
-
-              const totalDays = updatedPractice.duration;
-              const completedDays = updatedPractice.completedDates.length;
-              updatedPractice.progress = (completedDays / totalDays) * 100;
-
-              dispatch(updatePractice(updatedPractice));
-            }}
+      <AnimatePresence>
+        {isStatsModalOpen && (
+          <StatsModal
+            isOpen={isStatsModalOpen}
+            onClose={() => setIsStatsModalOpen(false)}
+            practices={practices}
           />
         )}
       </AnimatePresence>

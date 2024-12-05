@@ -1,5 +1,4 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { composeWithDevTools } from '@redux-devtools/extension';
 import practicesReducer from './practicesSlice';
 import notificationReducer from './notificationSlice';
 
@@ -8,7 +7,7 @@ export const store = configureStore({
     practices: practicesReducer,
     notifications: notificationReducer,
   },
-  devTools: process.env.NODE_ENV !== 'production',
+  devTools: true,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: false,

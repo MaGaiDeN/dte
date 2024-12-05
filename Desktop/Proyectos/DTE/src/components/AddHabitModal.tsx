@@ -103,9 +103,9 @@ export function AddHabitModal({ isOpen, onClose, onAdd, onEdit, editPractice }: 
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.95, opacity: 0, y: 20 }}
           transition={{ type: "spring", duration: 0.3 }}
-          className="w-full max-w-lg bg-white dark:bg-gray-800 shadow-xl rounded-xl overflow-hidden relative"
+          className="inline-block w-full max-w-lg p-6 my-8 text-left align-middle bg-white dark:bg-gray-800 rounded-2xl shadow-xl transform transition-all relative"
         >
-          <div className="flex justify-between items-center border-b border-gray-100 dark:border-gray-700 p-4 sm:p-6">
+          <div className="max-h-[80vh] overflow-y-auto pb-20">
             <motion.h2 
               initial={{ x: -20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
@@ -127,14 +127,12 @@ export function AddHabitModal({ isOpen, onClose, onAdd, onEdit, editPractice }: 
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400 transition-colors rounded-lg p-1"
+              className="text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400 transition-colors rounded-lg p-1 absolute top-4 right-4"
             >
               <X className="h-5 w-5 sm:h-6 sm:w-6" />
             </motion.button>
-          </div>
 
-          <div className="p-4 sm:p-6 overflow-y-auto max-h-[calc(85vh-4rem)]">
-            <form id="habitForm" onSubmit={handleSubmit} className="space-y-6">
+            <form id="habitForm" onSubmit={handleSubmit} className="space-y-6 px-4">
               <div>
                 <label htmlFor="practice-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Nombre de la práctica
@@ -264,37 +262,39 @@ export function AddHabitModal({ isOpen, onClose, onAdd, onEdit, editPractice }: 
             </form>
           </div>
 
-          <div className="border-t border-gray-100 dark:border-gray-700 p-4 sm:p-6 flex flex-col sm:flex-row justify-end gap-3">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-200 w-full sm:w-auto"
-            >
-              Cancelar
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              type="submit"
-              form="habitForm"
-              className="px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 transition-colors w-full sm:w-auto"
-            >
-              <span className="flex items-center justify-center gap-2">
-                {editPractice ? (
-                  <>
-                    <Save className="h-4 w-4" />
-                    Guardar Cambios
-                  </>
-                ) : (
-                  <>
-                    <Plus className="h-4 w-4" />
-                    Crear Práctica
-                  </>
-                )}
-              </span>
-            </motion.button>
+          <div className="absolute bottom-0 left-0 right-0 p-6 bg-white dark:bg-gray-800 border-t dark:border-gray-700">
+            <div className="flex justify-end space-x-4">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-200 w-full sm:w-auto"
+              >
+                Cancelar
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                type="submit"
+                form="habitForm"
+                className="px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                <span className="flex items-center justify-center gap-2">
+                  {editPractice ? (
+                    <>
+                      <Save className="h-4 w-4" />
+                      Guardar Cambios
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="h-4 w-4" />
+                      Crear Práctica
+                    </>
+                  )}
+                </span>
+              </motion.button>
+            </div>
           </div>
         </motion.div>
       </div>

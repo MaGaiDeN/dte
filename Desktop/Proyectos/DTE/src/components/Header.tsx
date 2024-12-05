@@ -1,13 +1,14 @@
-import { Sparkles, Settings, RotateCcw, Moon, Sun, Menu, Plus } from 'lucide-react';
+import { Sparkles, Settings, RotateCcw, Moon, Sun, Menu, Plus, ChartBarIcon } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useState } from 'react';
 
 interface HeaderProps {
   onReset: () => void;
   onNewPractice: () => void;
+  onShowStats: () => void;
 }
 
-export function Header({ onReset, onNewPractice }: HeaderProps) {
+export function Header({ onReset, onNewPractice, onShowStats }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -52,6 +53,13 @@ export function Header({ onReset, onNewPractice }: HeaderProps) {
               {/* Desktop navigation */}
               <nav className="hidden sm:flex items-center space-x-4">
                 <button 
+                  onClick={onShowStats}
+                  className="flex items-center px-3 py-2 rounded-lg text-indigo-100 hover:text-white hover:bg-white/10 transition-colors"
+                >
+                  <ChartBarIcon className="h-5 w-5" />
+                  <span className="ml-2">Estadísticas</span>
+                </button>
+                <button 
                   onClick={onNewPractice}
                   className="flex items-center px-3 py-2 rounded-lg text-indigo-100 hover:text-white hover:bg-white/10 transition-colors"
                 >
@@ -91,6 +99,13 @@ export function Header({ onReset, onNewPractice }: HeaderProps) {
             {/* Mobile navigation */}
             {isMenuOpen && (
               <nav className="sm:hidden mt-4 pb-4 space-y-2">
+                <button 
+                  onClick={onShowStats}
+                  className="flex w-full items-center px-3 py-2 rounded-lg text-indigo-100 hover:text-white hover:bg-white/10 transition-colors"
+                >
+                  <ChartBarIcon className="h-5 w-5" />
+                  <span className="ml-2">Estadísticas</span>
+                </button>
                 <button 
                   onClick={onNewPractice}
                   className="flex w-full items-center px-3 py-2 rounded-lg text-indigo-100 hover:text-white hover:bg-white/10 transition-colors"

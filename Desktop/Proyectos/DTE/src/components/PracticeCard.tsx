@@ -3,6 +3,7 @@ import { Trash2, Settings } from 'lucide-react';
 import type { Practice } from '../types/Habit';
 import { fadeIn, progressBarVariants } from '../constants/animations';
 import * as Progress from '@radix-ui/react-progress';
+import { forwardRef } from 'react';
 
 interface PracticeCardProps {
   practice: Practice;
@@ -11,7 +12,7 @@ interface PracticeCardProps {
   onEdit: (practice: Practice) => void;
 }
 
-export function PracticeCard({ practice, onDelete, onClick, onEdit }: PracticeCardProps) {
+export const PracticeCard = forwardRef<HTMLDivElement, PracticeCardProps>(({ practice, onDelete, onClick, onEdit }, ref) => {
   const getDates = () => {
     // Generate an array of dates based on the startDate and duration
     const dates: string[] = [];
@@ -31,12 +32,17 @@ export function PracticeCard({ practice, onDelete, onClick, onEdit }: PracticeCa
   };
 
   const isDateClickable = (dateStr: string, index: number) => {
-    // If there are no completed dates, only allow day 1
+    // Si la fecha ya está completada, no debería ser clickeable
+    if (isDateCompleted(dateStr)) {
+      return false;
+    }
+
+    // Si no hay fechas completadas, solo permitir el día 1
     if (practice.completedDates.length === 0) {
       return index === 0;
     }
 
-    // Find the highest day number completed
+    // Encontrar el número más alto de día completado
     const completedDays = practice.completedDates.map(date => {
       const dateObj = new Date(date);
       const startDate = new Date(practice.startDate);
@@ -44,9 +50,10 @@ export function PracticeCard({ practice, onDelete, onClick, onEdit }: PracticeCa
     });
 
     const maxCompletedDay = Math.max(...completedDays);
-    
-    // Only allow clicking the next day after the highest completed day
-    return index === maxCompletedDay;
+    const currentDay = index + 1;
+
+    // Solo permitir clickear el siguiente día después del último completado
+    return currentDay === maxCompletedDay + 1;
   };
 
   const getRemainingDays = () => {
@@ -64,84 +71,55 @@ export function PracticeCard({ practice, onDelete, onClick, onEdit }: PracticeCa
       animate="animate"
       exit="exit"
       className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:hover:border-gray-600 transition-all duration-200 overflow-hidden"
+      ref={ref}
     >
       <div 
         className="p-4 sm:p-6 rounded-t-xl"
         style={{ background: `linear-gradient(to right, ${practice.color}CC, ${practice.color}99)` }}
       >
-        <div className="flex justify-between items-start">
+        <div className="flex justify-between items-start mb-4">
           <div>
-            <motion.h3
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="text-base sm:text-lg font-medium text-white"
-            >
-              {practice.name}
-            </motion.h3>
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="mt-1 text-xs sm:text-sm text-white/80"
-            >
-              {practice.description}
-            </motion.p>
-            <div className="mt-2 flex items-center space-x-3">
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-xs sm:text-sm text-white/90"
-              >
-                {remainingDays > 0 
-                  ? `${remainingDays} días restantes` 
-                  : "Período completado"}
-              </motion.p>
-              <span className="text-xs sm:text-sm text-white/90">•</span>
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-xs sm:text-sm text-white/90"
-              >
-                {practice.duration} días en total
-              </motion.p>
-            </div>
+            <h3 className="text-lg font-semibold text-white mb-1">{practice.name}</h3>
+            <p className="text-sm text-white/80">{remainingDays} days remaining</p>
           </div>
-          <div className="flex space-x-2">
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => onEdit(practice)}
-              className="p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
-            >
-              <Settings className="w-4 h-4 sm:w-5 sm:h-5" />
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
+          <div className="flex gap-2">
+            <button
               onClick={(e) => {
                 e.stopPropagation();
-                if (window.confirm('¿Estás seguro de que quieres eliminar esta práctica?')) {
-                  onDelete(practice.id);
-                }
+                onEdit(practice);
               }}
-              className="p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
             >
-              <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
-            </motion.button>
+              <Settings className="w-5 h-5 text-white" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(practice.id);
+              }}
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+            >
+              <Trash2 className="w-5 h-5 text-white" />
+            </button>
           </div>
         </div>
-
-        <div className="mt-4 space-y-2">
-          <div className="flex justify-between items-center text-xs sm:text-sm text-white">
-            <span className="opacity-90">Progreso</span>
-            <span className="font-medium">{Math.round(practice.progress)}%</span>
-          </div>
-          <Progress.Root className="h-2 bg-white/20 rounded-full overflow-hidden">
-            <Progress.Indicator
-              className="h-full transition-all duration-500 ease-out rounded-full bg-white"
-              style={{ width: `${practice.progress}%` }}
+        <Progress.Root className="relative overflow-hidden bg-white/20 rounded-full w-full h-2">
+          <Progress.Indicator
+            className="bg-white"
+            style={{ 
+              transform: `translateX(-${100 - (practice.completedDates.length / practice.duration * 100)}%)` 
+            }}
+            asChild
+          >
+            <motion.div 
+              variants={progressBarVariants}
+              initial="initial"
+              animate="animate"
+              custom={(practice.completedDates.length / practice.duration * 100)}
+              className="w-full h-full transition-transform duration-500 ease-out"
             />
-          </Progress.Root>
-        </div>
+          </Progress.Indicator>
+        </Progress.Root>
       </div>
       
       <div className="p-4 sm:p-6">
@@ -193,4 +171,4 @@ export function PracticeCard({ practice, onDelete, onClick, onEdit }: PracticeCa
       </div>
     </motion.div>
   );
-}
+});

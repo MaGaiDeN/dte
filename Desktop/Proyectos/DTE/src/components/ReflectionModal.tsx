@@ -1,7 +1,17 @@
 import { motion } from 'framer-motion';
 import { X, BookOpen, Brain, Flower2, AlertCircle } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, memo } from 'react';
 import { TRANSFORMATION_SHORTCUTS } from '../types/Reflection';
+
+// Función auxiliar para obtener el día actual basado en la hora local
+const getCurrentDay = () => {
+  const now = new Date();
+  // Si es antes de las 00:00, retornamos el día anterior
+  if (now.getHours() < 0) {
+    now.setDate(now.getDate() - 1);
+  }
+  return now.toISOString().split('T')[0];
+};
 
 interface ReflectionModalProps {
   isOpen: boolean;
@@ -40,7 +50,7 @@ interface ReflectionModalProps {
   }) => void;
 }
 
-export function ReflectionModal({ isOpen, onClose, date, practiceId, onSave }: ReflectionModalProps) {
+export const ReflectionModal = memo(({ isOpen, onClose, date, practiceId, onSave }: ReflectionModalProps) => {
   const [event, setEvent] = useState('');
   const [emotionalResponse, setEmotionalResponse] = useState('');
   const [insights, setInsights] = useState('');
@@ -53,11 +63,39 @@ export function ReflectionModal({ isOpen, onClose, date, practiceId, onSave }: R
     mentalClearing: false,
     selfInquiry: false,
   });
+  const [hasChanges, setHasChanges] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (!isOpen) {
+      setEvent('');
+      setEmotionalResponse('');
+      setInsights('');
+      setLevel('superficial');
+      setLimitingBelief('');
+      setNewPerspective('');
+      setPractices({
+        breathingExercise: false,
+        witnessPresence: false,
+        mentalClearing: false,
+        selfInquiry: false,
+      });
+      setHasChanges(false);
+    }
+  }, [isOpen]);
+
+  const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     const isEmpty = !event && !emotionalResponse && !insights && !limitingBelief && !newPerspective &&
       !Object.values(practices).some(Boolean);
+
+    // Verificar si el día es válido para editar
+    const currentDay = getCurrentDay();
+    const selectedDate = new Date(date).toISOString().split('T')[0];
+    
+    if (selectedDate > currentDay) {
+      alert('No puedes editar días futuros');
+      return;
+    }
 
     onSave({
       practiceId,
@@ -84,8 +122,32 @@ export function ReflectionModal({ isOpen, onClose, date, practiceId, onSave }: R
       isEmpty,
     });
 
-    onClose();
-  };
+    setHasChanges(false);
+  }, [event, emotionalResponse, insights, limitingBelief, newPerspective, practices, practiceId, date, level, onSave]);
+
+  const handlePracticeSelect = useCallback((type: 'breathing' | 'witness' | 'inquiry' | 'clearing') => {
+    setPractices(prev => {
+      const newPractices = {
+        ...prev,
+        breathingExercise: type === 'breathing' ? !prev.breathingExercise : prev.breathingExercise,
+        witnessPresence: type === 'witness' ? !prev.witnessPresence : prev.witnessPresence,
+        selfInquiry: type === 'inquiry' ? !prev.selfInquiry : prev.selfInquiry,
+        mentalClearing: type === 'clearing' ? !prev.mentalClearing : prev.mentalClearing,
+      };
+      setHasChanges(true);
+      return newPractices;
+    });
+  }, []);
+
+  const handleClose = useCallback(() => {
+    if (hasChanges) {
+      if (window.confirm('¿Estás seguro de que quieres cerrar? Hay cambios sin guardar.')) {
+        onClose();
+      }
+    } else {
+      onClose();
+    }
+  }, [hasChanges, onClose]);
 
   if (!isOpen) return null;
 
@@ -103,7 +165,7 @@ export function ReflectionModal({ isOpen, onClose, date, practiceId, onSave }: R
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 bg-black/50 dark:bg-black/70"
-        onClick={onClose}
+        onClick={handleClose}
       />
 
       <div className="flex min-h-screen items-center justify-center p-4">
@@ -112,7 +174,7 @@ export function ReflectionModal({ isOpen, onClose, date, practiceId, onSave }: R
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.95, opacity: 0, y: 20 }}
           transition={{ type: "spring", duration: 0.3 }}
-          className="relative w-full max-w-2xl max-h-[85vh] bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden"
+          className="relative w-full max-w-2xl bg-white dark:bg-gray-800 rounded-xl shadow-xl flex flex-col my-6"
         >
           <div className="flex justify-between items-center border-b border-gray-100 dark:border-gray-700 p-6">
             <motion.h2
@@ -125,64 +187,129 @@ export function ReflectionModal({ isOpen, onClose, date, practiceId, onSave }: R
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              onClick={onClose}
+              onClick={handleClose}
               className="text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400 transition-colors rounded-lg p-1"
             >
               <X className="h-6 w-6" />
             </motion.button>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
-            <form id="reflectionForm" onSubmit={handleSubmit}>
+          <div className="flex-1 overflow-y-auto max-h-[calc(85vh-8rem)]">
+            <form id="reflectionForm" onSubmit={handleSubmit} className="p-6 space-y-6">
               <div className="space-y-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Prácticas Realizadas
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <label className="relative flex items-start">
-                    <input
-                      type="checkbox"
-                      checked={practices.breathingExercise}
-                      onChange={(e) => setPractices({ ...practices, breathingExercise: e.target.checked })}
-                      className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 mt-1"
-                    />
-                    <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
-                      Respiración Consciente
-                    </span>
-                  </label>
-                  <label className="relative flex items-start">
-                    <input
-                      type="checkbox"
-                      checked={practices.witnessPresence}
-                      onChange={(e) => setPractices({ ...practices, witnessPresence: e.target.checked })}
-                      className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 mt-1"
-                    />
-                    <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
-                      Presencia Testigo
-                    </span>
-                  </label>
-                  <label className="relative flex items-start">
-                    <input
-                      type="checkbox"
-                      checked={practices.mentalClearing}
-                      onChange={(e) => setPractices({ ...practices, mentalClearing: e.target.checked })}
-                      className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 mt-1"
-                    />
-                    <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
-                      Vaciado Mental
-                    </span>
-                  </label>
-                  <label className="relative flex items-start">
-                    <input
-                      type="checkbox"
-                      checked={practices.selfInquiry}
-                      onChange={(e) => setPractices({ ...practices, selfInquiry: e.target.checked })}
-                      className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 mt-1"
-                    />
-                    <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
-                      Autoindagación
-                    </span>
-                  </label>
+                <h3 className="text-lg font-semibold">Prácticas Realizadas</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setPractices(prev => ({
+                      ...prev,
+                      breathingExercise: !prev.breathingExercise
+                    }))}
+                    className={`flex items-center justify-center p-4 rounded-lg border-2 transition-all duration-200 ${
+                      practices.breathingExercise
+                        ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
+                        : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <BookOpen className={`h-6 w-6 mx-auto mb-2 ${
+                        practices.breathingExercise
+                          ? 'text-indigo-500'
+                          : 'text-gray-400 dark:text-gray-500'
+                      }`} />
+                      <span className={`text-sm font-medium ${
+                        practices.breathingExercise
+                          ? 'text-indigo-700 dark:text-indigo-300'
+                          : 'text-gray-600 dark:text-gray-400'
+                      }`}>
+                        Ejercicios de Respiración
+                      </span>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPractices(prev => ({
+                      ...prev,
+                      witnessPresence: !prev.witnessPresence
+                    }))}
+                    className={`flex items-center justify-center p-4 rounded-lg border-2 transition-all duration-200 ${
+                      practices.witnessPresence
+                        ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
+                        : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <Brain className={`h-6 w-6 mx-auto mb-2 ${
+                        practices.witnessPresence
+                          ? 'text-indigo-500'
+                          : 'text-gray-400 dark:text-gray-500'
+                      }`} />
+                      <span className={`text-sm font-medium ${
+                        practices.witnessPresence
+                          ? 'text-indigo-700 dark:text-indigo-300'
+                          : 'text-gray-600 dark:text-gray-400'
+                      }`}>
+                        Presencia Testigo
+                      </span>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPractices(prev => ({
+                      ...prev,
+                      mentalClearing: !prev.mentalClearing
+                    }))}
+                    className={`flex items-center justify-center p-4 rounded-lg border-2 transition-all duration-200 ${
+                      practices.mentalClearing
+                        ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
+                        : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <Flower2 className={`h-6 w-6 mx-auto mb-2 ${
+                        practices.mentalClearing
+                          ? 'text-indigo-500'
+                          : 'text-gray-400 dark:text-gray-500'
+                      }`} />
+                      <span className={`text-sm font-medium ${
+                        practices.mentalClearing
+                          ? 'text-indigo-700 dark:text-indigo-300'
+                          : 'text-gray-600 dark:text-gray-400'
+                      }`}>
+                        Limpieza Mental
+                      </span>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPractices(prev => ({
+                      ...prev,
+                      selfInquiry: !prev.selfInquiry
+                    }))}
+                    className={`flex items-center justify-center p-4 rounded-lg border-2 transition-all duration-200 ${
+                      practices.selfInquiry
+                        ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
+                        : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <AlertCircle className={`h-6 w-6 mx-auto mb-2 ${
+                        practices.selfInquiry
+                          ? 'text-indigo-500'
+                          : 'text-gray-400 dark:text-gray-500'
+                      }`} />
+                      <span className={`text-sm font-medium ${
+                        practices.selfInquiry
+                          ? 'text-indigo-700 dark:text-indigo-300'
+                          : 'text-gray-600 dark:text-gray-400'
+                      }`}>
+                        Auto-indagación
+                      </span>
+                    </div>
+                  </button>
                 </div>
               </div>
 
@@ -215,7 +342,8 @@ export function ReflectionModal({ isOpen, onClose, date, practiceId, onSave }: R
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                  <Brain className="h-4 w-4" />
                   Nivel de Contemplación
                 </label>
                 <div className="mt-2 grid grid-cols-2 gap-3">
@@ -267,7 +395,8 @@ export function ReflectionModal({ isOpen, onClose, date, practiceId, onSave }: R
               </div>
 
               <div>
-                <label htmlFor="insights" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label htmlFor="insights" className="block text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                  <BookOpen className="h-4 w-4" />
                   Insights y Observaciones
                 </label>
                 <textarea
@@ -281,7 +410,8 @@ export function ReflectionModal({ isOpen, onClose, date, practiceId, onSave }: R
               </div>
 
               <div>
-                <label htmlFor="limiting-belief" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label htmlFor="limiting-belief" className="block text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4" />
                   Creencia Limitante Identificada
                 </label>
                 <textarea
@@ -295,7 +425,8 @@ export function ReflectionModal({ isOpen, onClose, date, practiceId, onSave }: R
               </div>
 
               <div>
-                <label htmlFor="new-perspective" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label htmlFor="new-perspective" className="block text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                  <Flower2 className="h-4 w-4" />
                   Nueva Perspectiva
                 </label>
                 <textarea
@@ -310,24 +441,25 @@ export function ReflectionModal({ isOpen, onClose, date, practiceId, onSave }: R
             </form>
           </div>
 
-          <div className="border-t border-gray-100 dark:border-gray-700 p-6 flex flex-col sm:flex-row justify-end gap-3">
+          <div className="border-t border-gray-100 dark:border-gray-700 p-6 flex justify-end space-x-4">
             <button
               type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-200 w-full sm:w-auto"
+              onClick={handleClose}
+              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
               Cancelar
             </button>
             <button
               type="submit"
               form="reflectionForm"
-              className="px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 transition-colors w-full sm:w-auto"
+              className="inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              disabled={!hasChanges}
             >
-              Guardar Reflexión
+              Guardar
             </button>
           </div>
         </motion.div>
       </div>
     </div>
   );
-}
+});
