@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
   # Runs on specific path changes
   push:
-    branches: ["master"]
+    branches: ["master"]  # Asegurándonos de que coincida con la rama principal
     paths:
       - 'src/**'
       - 'public/**'
