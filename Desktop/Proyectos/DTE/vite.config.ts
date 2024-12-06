@@ -7,22 +7,15 @@ export default defineConfig({
   base: '/dte/',
   build: {
     outDir: 'dist',
-    assetsDir: 'assets',
-    sourcemap: false,
-    minify: 'terser',
+    emptyOutDir: true,
     rollupOptions: {
       output: {
-        manualChunks: undefined,
-        assetFileNames: (assetInfo) => {
-          const info = assetInfo.name.split('.');
-          const ext = info[info.length - 1];
-          return `assets/[name]-[hash][extname]`;
-        },
-        chunkFileNames: 'assets/[name]-[hash].js',
-        entryFileNames: 'assets/[name]-[hash].js',
+        // Trigger workflow update
+        entryFileNames: `assets/[name].[hash].js`,
+        chunkFileNames: `assets/[name].[hash].js`,
+        assetFileNames: `assets/[name].[hash].[ext]`
       }
-    },
-    emptyOutDir: true,
+    }
   },
   server: {
     fs: {
