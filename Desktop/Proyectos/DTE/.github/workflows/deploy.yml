@@ -20,19 +20,23 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
+          cache: 'npm'
           
       - name: Install Dependencies
-        run: npm install
-        
+        run: |
+          npm ci
+          
       - name: Build
-        run: npm run build
+        run: |
+          npm run build
         env:
           VITE_BASE_URL: '/dte'
+          NODE_ENV: 'production'
           
       - name: Setup Pages
         uses: actions/configure-pages@v4
