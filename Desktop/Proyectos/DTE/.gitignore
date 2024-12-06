@@ -1,11 +1,8 @@
 # Dependencies
-node_modules
 .pnp
 .pnp.js
 
 # Production
-dist
-dist-ssr
 build
 
 # Testing
@@ -13,10 +10,6 @@ coverage
 
 # Environment files
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
 
 # Editor directories and files
 .vscode/*
@@ -45,3 +38,14 @@ lerna-debug.log*
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# System files
+Desktop/
+**/Desktop/
+**/.DS_Store
+**/node_modules/
+**/dist/
+**/.vscode/
+**/.idea/
+**/build/
+**/coverage/
