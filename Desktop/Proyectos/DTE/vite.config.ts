@@ -28,5 +28,7 @@ export default defineConfig({
     fs: {
       strict: true
     }
-  }
+  },
+  // Add a comment to trigger the workflow
+  // Last updated: 2024-02-13
 });
