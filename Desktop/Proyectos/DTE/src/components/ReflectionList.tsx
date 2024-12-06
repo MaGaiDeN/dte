@@ -1,12 +1,10 @@
-import { Brain, Flower2, Award } from 'lucide-react';
-import type { Reflection, MindfulnessStats } from '../types/Reflection';
+import type { Reflection } from '../types/Reflection';
 
 interface ReflectionListProps {
   reflections: Reflection[];
-  stats: MindfulnessStats;
 }
 
-export function ReflectionList({ reflections, stats }: ReflectionListProps) {
+export function ReflectionList({ reflections }: ReflectionListProps) {
   return (
     <div className="space-y-6">
       {/* Stats section remains the same */}
