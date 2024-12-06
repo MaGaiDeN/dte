@@ -9,10 +9,11 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  actions: write
 
 concurrency:
   group: "pages"
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -21,26 +22,31 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Clean npm cache
+        run: npm cache clean --force
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
           cache: 'npm'
-          
-      - name: Install Dependencies
+
+      - name: Clean install dependencies
         run: |
+          rm -rf node_modules
+          rm -rf dist
           npm ci
-          
+
       - name: Build
         run: |
           npm run build
         env:
           VITE_BASE_URL: '/dte'
           NODE_ENV: 'production'
-          
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
-        
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
         with:
@@ -56,3 +62,6 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v3
+        with:
+          timeout: 600000  # 10 minutes
+          error_count: 10  # Number of retries
