@@ -29,11 +29,29 @@ export const practicesSlice = createSlice({
       localStorage.setItem('practices', JSON.stringify(state.items));
     },
     updatePractice: (state, action: PayloadAction<Practice>) => {
-      console.log('Redux Action: updatePractice', action.payload);
+      console.log('Redux Action: updatePractice - Previous state:', JSON.stringify(state.items));
+      console.log('Redux Action: updatePractice - Payload:', JSON.stringify(action.payload));
+      
       const index = state.items.findIndex(p => p.id === action.payload.id);
       if (index !== -1) {
-        state.items[index] = action.payload;
-        localStorage.setItem('practices', JSON.stringify(state.items));
+        // Create a deep copy of the practice object
+        const updatedPractice = JSON.parse(JSON.stringify({
+          ...action.payload,
+          reflections: action.payload.reflections || {}
+        }));
+        
+        // Create a new array with the updated practice
+        const newItems = [
+          ...state.items.slice(0, index),
+          updatedPractice,
+          ...state.items.slice(index + 1)
+        ];
+        
+        // Update state and localStorage
+        state.items = newItems;
+        localStorage.setItem('practices', JSON.stringify(newItems));
+        
+        console.log('Redux Action: updatePractice - New state:', JSON.stringify(newItems));
       }
     },
     deletePractice: (state, action: PayloadAction<string>) => {

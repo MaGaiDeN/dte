@@ -4,16 +4,6 @@ import { useState, useEffect, useCallback, memo, useMemo } from 'react';
 import { TRANSFORMATION_SHORTCUTS } from '../types/Reflection';
 import type { Practice } from '../types/Habit';
 
-// Función auxiliar para obtener el día actual basado en la hora local
-const getCurrentDay = () => {
-  const now = new Date();
-  // Si es antes de las 4:00 AM, consideramos que es parte del día anterior
-  if (now.getHours() < 4) {
-    now.setDate(now.getDate() - 1);
-  }
-  return now.toISOString().split('T')[0];
-};
-
 interface ReflectionModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -102,10 +92,21 @@ export const ReflectionModal = memo(({ isOpen, onClose, date, practiceId, practi
 
   useEffect(() => {
     if (isOpen && date && practice) {
+      console.log('Modal opened with:', {
+        date,
+        practiceId,
+        practice: JSON.stringify(practice),
+        reflections: JSON.stringify(practice.reflections || {})
+      });
+
+      // Ensure reflections object exists
+      const reflections = practice.reflections || {};
+      
       // Buscar si ya existe una reflexión para esta fecha
-      const existingReflection = practice.reflections?.[date];
+      const existingReflection = reflections[date];
 
       if (existingReflection) {
+        console.log('Loading existing reflection:', existingReflection);
         // Si existe, cargar los datos guardados
         setFormData({
           practiceId,
@@ -123,6 +124,8 @@ export const ReflectionModal = memo(({ isOpen, onClose, date, practiceId, practi
           }
         });
       } else {
+        console.log('No existing reflection found for date:', date);
+        console.log('Current reflections object:', reflections);
         // Si no existe, resetear el formulario
         setFormData({
           practiceId,
@@ -141,7 +144,7 @@ export const ReflectionModal = memo(({ isOpen, onClose, date, practiceId, practi
         });
       }
     }
-  }, [isOpen, date, practice]);
+  }, [isOpen, date, practice, practiceId]);
 
   const handleInputChange = useCallback((field: string, value: any) => {
     setFormData(prev => ({
@@ -175,7 +178,28 @@ export const ReflectionModal = memo(({ isOpen, onClose, date, practiceId, practi
     handleSave();
   };
 
+  const formatDateToISO = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toISOString().split('T')[0];
+  };
+
   const handleSave = () => {
+    console.log('Starting handleSave with:', {
+      date,
+      practiceId,
+      practice: JSON.stringify(practice),
+      formData: JSON.stringify(formData)
+    });
+    
+    // Validate and format date
+    const isoDate = formatDateToISO(date);
+    console.log('Formatted ISO date:', isoDate);
+    
+    if (!isoDate || isNaN(new Date(isoDate).getTime())) {
+      console.error('Invalid date provided:', date);
+      return;
+    }
+
     // Validate required fields - check if at least one practice is selected or there's content
     const hasSelectedPractices = Object.values(formData.practices).some(p => p);
     const hasContent = Boolean(formData.event || formData.emotionalResponse || formData.insights || formData.limitingBelief || formData.newPerspective);
@@ -185,16 +209,10 @@ export const ReflectionModal = memo(({ isOpen, onClose, date, practiceId, practi
       return;
     }
 
-    // Validate date
-    if (!date || isNaN(new Date(date).getTime())) {
-      console.error('Invalid date provided');
-      return;
-    }
-
     // Create the reflection data
     const reflection = {
       practiceId: formData.practiceId,
-      date: date,
+      date: isoDate,
       event: {
         description: formData.event.trim(),
         emotionalResponse: formData.emotionalResponse.trim(),
@@ -217,49 +235,30 @@ export const ReflectionModal = memo(({ isOpen, onClose, date, practiceId, practi
       isEmpty: !hasContent && !hasSelectedPractices,
     };
 
-    // Don't mark as completed if the reflection is empty
+    console.log('Created reflection:', JSON.stringify(reflection));
+
+    // Don't save if the reflection is empty
     if (reflection.isEmpty) {
       onClose();
       return;
     }
 
-    // Ensure we have all required practice properties
-    const updatedPractice: Practice = {
+    // Initialize reflections if they don't exist
+    const currentReflections = practice.reflections || {};
+    
+    // Call updatePractice with the updated practice data
+    updatePractice({
       ...practice,
-      id: practice.id,
-      type: practice.type,
-      name: practice.name,
-      description: practice.description,
-      color: practice.color,
-      duration: practice.duration,
-      startDate: practice.startDate,
-      progress: practice.progress,
-      currentStreak: practice.currentStreak,
-      longestStreak: practice.longestStreak,
-      observations: practice.observations,
       reflections: {
-        ...(practice?.reflections || {}),
-        [date]: reflection
-      },
-      completedDates: Array.from(new Set([...(practice?.completedDates || []), date])).sort()
-    };
+        ...currentReflections,
+        [isoDate]: reflection
+      }
+    });
 
-    // Call both update functions
-    updatePractice(updatedPractice);
+    // Call onSave with the reflection data
     onSave(reflection);
     onClose();
   };
-
-  const [currentDay, setCurrentDay] = useState<string>(getCurrentDay());
-
-  // Update current day every minute to ensure it stays current
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentDay(getCurrentDay());
-    }, 60000); // Check every minute
-
-    return () => clearInterval(interval);
-  }, []);
 
   if (!isOpen) return null;
 
@@ -329,13 +328,22 @@ export const ReflectionModal = memo(({ isOpen, onClose, date, practiceId, practi
           className="relative w-full max-w-2xl bg-white dark:bg-gray-800 rounded-xl shadow-xl flex flex-col my-6"
         >
           <div className="flex justify-between items-center border-b border-gray-100 dark:border-gray-700 p-6">
-            <motion.h2
-              initial={{ x: -20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              className="text-xl font-semibold text-gray-900 dark:text-gray-100"
-            >
-              Reflexión del {formattedDate}
-            </motion.h2>
+            <div>
+              <motion.h2
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                className="text-xl font-semibold text-gray-900 dark:text-white"
+              >
+                Reflexión del día
+              </motion.h2>
+              <motion.p
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                className="text-sm text-gray-600 dark:text-gray-400 capitalize"
+              >
+                {formattedDate}
+              </motion.p>
+            </div>
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
@@ -348,9 +356,8 @@ export const ReflectionModal = memo(({ isOpen, onClose, date, practiceId, practi
 
           <div className="flex-1 overflow-y-auto max-h-[calc(85vh-8rem)]">
             <form id="reflectionForm" onSubmit={handleSubmit} className="p-6 space-y-6">
-              <p>Current Day: {currentDay}</p>
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Prácticas Realizadas</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Prácticas Realizadas</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {renderPracticeOption('breathing', <BookOpen className="h-6 w-6" />, 'breathingExercise')}
                   {renderPracticeOption('witness', <Brain className="h-6 w-6" />, 'witnessPresence')}

@@ -11,6 +11,8 @@ import { useAppSelector, useAppDispatch } from './store/hooks';
 import { resetPractices, deletePractice, addPractice, updatePractice } from './store/practicesSlice';
 import { staggerChildren } from './constants/animations';
 import chroma from 'chroma-js';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { ConfigProvider } from './contexts/ConfigContext';
 
 function App() {
   const practices = useAppSelector(state => state.practices.items);
@@ -65,7 +67,13 @@ function App() {
     const practice = practices.find((p) => p.id === reflection.practiceId);
     if (!practice) return;
 
-    const updatedPractice = { ...practice };
+    const updatedPractice = { 
+      ...practice,
+      reflections: {
+        ...practice.reflections,
+        [reflection.date]: reflection
+      }
+    };
     
     if (!reflection.isEmpty) {
       if (!updatedPractice.completedDates.includes(reflection.date)) {
@@ -85,105 +93,110 @@ function App() {
   }, [practices, dispatch]);
 
   return (
-    <div className="min-h-screen bg-light-primary dark:bg-gray-900 transition-colors duration-200">
-      <Header 
-        onReset={handleReset} 
-        onNewPractice={() => {
-          setEditingPractice(null);
-          setIsAddModalOpen(true);
-        }}
-        onShowStats={() => setIsStatsModalOpen(true)}
-      />
-      
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6">
-          <NotificationSettings />
-        </motion.div>
-
-        <motion.div 
-          variants={staggerChildren}
-          initial="initial"
-          animate="animate"
-          className="grid grid-cols-1 gap-4 sm:gap-6">
-          <AnimatePresence mode="popLayout">
-            {practices.map((practice) => (
-              <PracticeCard
-                key={practice.id}
-                practice={practice}
-                onDelete={(id) => {
-                  dispatch(deletePractice(id));
-                }}
-                onClick={(practiceId, date) => {
-                  setSelectedPracticeId(practiceId);
-                  setSelectedDate(date);
-                  setIsReflectionModalOpen(true);
-                }}
-                onEdit={handleEditPractice}
-              />
-            ))}
-          </AnimatePresence>
-        </motion.div>
-      </main>
-
-      <AnimatePresence>
-        {isAddModalOpen && (
-          <AddHabitModal
-            isOpen={isAddModalOpen}
-            onClose={() => {
-              setIsAddModalOpen(false);
+    <ThemeProvider>
+      <ConfigProvider>
+        <div className="min-h-screen bg-light-primary dark:bg-gray-900 transition-colors duration-200">
+          <Header 
+            onReset={handleReset} 
+            onNewPractice={() => {
               setEditingPractice(null);
+              setIsAddModalOpen(true);
             }}
-            editPractice={editingPractice}
-            onAdd={(form) => {
-              const newPractice: Practice = {
-                id: crypto.randomUUID(),
-                type: form.type,
-                name: form.name,
-                description: form.description,
-                color: chroma.random().hex(),
-                progress: 0,
-                completedDates: [],
-                currentStreak: 0,
-                longestStreak: 0,
-                duration: form.duration,
-                startDate: new Date().toISOString().split('T')[0]
-              };
-              dispatch(addPractice(newPractice));
-            }}
-            onEdit={(updatedPractice) => {
-              dispatch(updatePractice(updatedPractice));
-            }}
+            onShowStats={() => setIsStatsModalOpen(true)}
           />
-        )}
-      </AnimatePresence>
+          
+          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6">
+              <NotificationSettings />
+            </motion.div>
 
-      <AnimatePresence>
-        {isReflectionModalOpen && (
-          <ReflectionModal
-            isOpen={isReflectionModalOpen}
-            onClose={() => setIsReflectionModalOpen(false)}
-            date={selectedDate}
-            practiceId={selectedPracticeId}
-            practice={practices.find(p => p.id === selectedPracticeId) as Practice}
-            updatePractice={(updatedPractice) => dispatch(updatePractice(updatedPractice))}
-            onSave={handleSaveReflection}
-          />
-        )}
-      </AnimatePresence>
+            <motion.div 
+              variants={staggerChildren}
+              initial="initial"
+              animate="animate"
+              className="grid grid-cols-1 gap-4 sm:gap-6">
+              <AnimatePresence mode="popLayout">
+                {practices.map((practice) => (
+                  <PracticeCard
+                    key={practice.id}
+                    practice={practice}
+                    onDelete={(id) => {
+                      dispatch(deletePractice(id));
+                    }}
+                    onClick={(practiceId, date) => {
+                      setSelectedPracticeId(practiceId);
+                      setSelectedDate(date);
+                      setIsReflectionModalOpen(true);
+                    }}
+                    onEdit={handleEditPractice}
+                  />
+                ))}
+              </AnimatePresence>
+            </motion.div>
+          </main>
 
-      <AnimatePresence>
-        {isStatsModalOpen && (
-          <StatsModal
-            isOpen={isStatsModalOpen}
-            onClose={() => setIsStatsModalOpen(false)}
-            practices={practices}
-          />
-        )}
-      </AnimatePresence>
-    </div>
+          <AnimatePresence>
+            {isAddModalOpen && (
+              <AddHabitModal
+                isOpen={isAddModalOpen}
+                onClose={() => {
+                  setIsAddModalOpen(false);
+                  setEditingPractice(null);
+                }}
+                editPractice={editingPractice}
+                onAdd={(form) => {
+                  const newPractice: Practice = {
+                    id: crypto.randomUUID(),
+                    type: form.type,
+                    name: form.name,
+                    description: form.description,
+                    color: chroma.random().hex(),
+                    progress: 0,
+                    completedDates: [],
+                    currentStreak: 0,
+                    longestStreak: 0,
+                    duration: form.duration,
+                    startDate: new Date().toISOString().split('T')[0],
+                    reflections: {}  // Initialize empty reflections
+                  };
+                  dispatch(addPractice(newPractice));
+                }}
+                onEdit={(updatedPractice) => {
+                  dispatch(updatePractice(updatedPractice));
+                }}
+              />
+            )}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {isReflectionModalOpen && (
+              <ReflectionModal
+                isOpen={isReflectionModalOpen}
+                onClose={() => setIsReflectionModalOpen(false)}
+                date={selectedDate}
+                practiceId={selectedPracticeId}
+                practice={practices.find(p => p.id === selectedPracticeId) as Practice}
+                updatePractice={(updatedPractice) => dispatch(updatePractice(updatedPractice))}
+                onSave={handleSaveReflection}
+              />
+            )}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {isStatsModalOpen && (
+              <StatsModal
+                isOpen={isStatsModalOpen}
+                onClose={() => setIsStatsModalOpen(false)}
+                practices={practices}
+              />
+            )}
+          </AnimatePresence>
+        </div>
+      </ConfigProvider>
+    </ThemeProvider>
   );
 }
 
