@@ -13,6 +13,7 @@ import { staggerChildren } from './constants/animations';
 import chroma from 'chroma-js';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ConfigProvider } from './contexts/ConfigContext';
+import { MeditationChallengeForm } from './components/MeditationChallengeForm';
 
 function App() {
   const practices = useAppSelector(state => state.practices.items);
@@ -23,10 +24,30 @@ function App() {
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedPracticeId, setSelectedPracticeId] = useState('');
   const [isReflectionModalOpen, setIsReflectionModalOpen] = useState(false);
+  const [isMeditationChallengeOpen, setIsMeditationChallengeOpen] = useState(false);
   const [editingPractice, setEditingPractice] = useState<Practice | null>(null);
 
   const handleReset = () => {
     dispatch(resetPractices());
+  };
+
+  const handleCreateChallenge = (type: 'meditation' | 'inquiry' | 'contemplation') => {
+    const newChallenge: Practice = {
+      id: crypto.randomUUID(),
+      type,
+      name: `Reto de 30 días de ${type === 'meditation' ? 'Meditación' : type === 'inquiry' ? 'Autoindagación' : 'Contemplación'}`,
+      description: `Reto de 30 días de ${type === 'meditation' ? 'meditación' : type === 'inquiry' ? 'autoindagación' : 'contemplación'} para desarrollar el hábito de la práctica diaria`,
+      duration: 30,
+      startDate: new Date().toISOString().split('T')[0],
+      progress: 0,
+      completedDates: [],
+      currentStreak: 0,
+      longestStreak: 0,
+      color: chroma.random().hex(),
+      reflections: {}
+    };
+    console.log('Creating new challenge:', newChallenge);
+    dispatch(addPractice(newChallenge));
   };
 
   const handleEditPractice = (practice: Practice) => {
@@ -103,6 +124,7 @@ function App() {
               setIsAddModalOpen(true);
             }}
             onShowStats={() => setIsStatsModalOpen(true)}
+            onCreateChallenge={handleCreateChallenge}
           />
           
           <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
@@ -127,9 +149,16 @@ function App() {
                       dispatch(deletePractice(id));
                     }}
                     onClick={(practiceId, date) => {
-                      setSelectedPracticeId(practiceId);
-                      setSelectedDate(date);
-                      setIsReflectionModalOpen(true);
+                      const practice = practices.find(p => p.id === practiceId);
+                      if (practice?.type === 'meditation' && practice.duration === 30) {
+                        setSelectedPracticeId(practiceId);
+                        setSelectedDate(date);
+                        setIsMeditationChallengeOpen(true);
+                      } else {
+                        setSelectedPracticeId(practiceId);
+                        setSelectedDate(date);
+                        setIsReflectionModalOpen(true);
+                      }
                     }}
                     onEdit={handleEditPractice}
                   />
@@ -181,6 +210,30 @@ function App() {
                 practice={practices.find(p => p.id === selectedPracticeId) as Practice}
                 updatePractice={(updatedPractice) => dispatch(updatePractice(updatedPractice))}
                 onSave={handleSaveReflection}
+              />
+            )}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {isMeditationChallengeOpen && selectedPracticeId && selectedDate && (
+              <MeditationChallengeForm
+                onSaveReflection={(reflection) => {
+                  handleSaveReflection({
+                    ...reflection,
+                    practiceId: selectedPracticeId,
+                    date: selectedDate,
+                  });
+                }}
+                dayNumber={(() => {
+                  const practice = practices.find(p => p.id === selectedPracticeId);
+                  if (!practice) return 1;
+                  const startDate = new Date(practice.startDate);
+                  const selectedDateObj = new Date(selectedDate);
+                  const diffTime = Math.abs(selectedDateObj.getTime() - startDate.getTime());
+                  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                  return diffDays;
+                })()}
+                onClose={() => setIsMeditationChallengeOpen(false)}
               />
             )}
           </AnimatePresence>

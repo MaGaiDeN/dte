@@ -9,7 +9,17 @@ interface PracticesState {
 }
 
 const initialState: PracticesState = {
-  items: JSON.parse(localStorage.getItem('practices') || JSON.stringify(DEFAULT_PRACTICES)),
+  items: (() => {
+    try {
+      const stored = localStorage.getItem('practices');
+      if (!stored) return DEFAULT_PRACTICES;
+      const parsed = JSON.parse(stored);
+      return Array.isArray(parsed) ? parsed : DEFAULT_PRACTICES;
+    } catch (error) {
+      console.error('Error loading practices from localStorage:', error);
+      return DEFAULT_PRACTICES;
+    }
+  })(),
   loading: false,
   error: null,
 };
@@ -25,7 +35,7 @@ export const practicesSlice = createSlice({
     },
     addPractice: (state, action: PayloadAction<Practice>) => {
       console.log('Redux Action: addPractice', action.payload);
-      state.items.push(action.payload);
+      state.items = [action.payload, ...state.items];
       localStorage.setItem('practices', JSON.stringify(state.items));
     },
     updatePractice: (state, action: PayloadAction<Practice>) => {

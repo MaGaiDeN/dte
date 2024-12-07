@@ -1,8 +1,9 @@
-import { motion } from 'framer-motion';
-import { X, BookOpen, Brain, Flower2, AlertCircle } from 'lucide-react';
-import { useState, useEffect, useCallback, memo, useMemo } from 'react';
+import { useMemo } from 'react';
+import { useState, useEffect, useCallback, memo } from 'react';
 import { TRANSFORMATION_SHORTCUTS } from '../types/Reflection';
 import type { Practice } from '../types/Habit';
+import { Modal } from './shared/Modal';
+import { BookOpen, Brain, Flower2, AlertCircle } from 'lucide-react';
 
 interface ReflectionModalProps {
   isOpen: boolean;
@@ -260,6 +261,25 @@ export const ReflectionModal = memo(({ isOpen, onClose, date, practiceId, practi
     onClose();
   };
 
+  const modalFooter = (
+    <div className="flex justify-end space-x-4">
+      <button
+        type="button"
+        onClick={onClose}
+        className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors"
+      >
+        Cancelar
+      </button>
+      <button
+        type="button"
+        onClick={handleSave}
+        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+      >
+        Guardar Reflexión
+      </button>
+    </div>
+  );
+
   if (!isOpen) return null;
 
   const formattedDate = new Date(date).toLocaleDateString('es-ES', {
@@ -310,208 +330,149 @@ export const ReflectionModal = memo(({ isOpen, onClose, date, practiceId, practi
   }, [formData.practices, handlePracticeSelect, getPracticeDescription]);
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/50 dark:bg-black/70"
-        onClick={onClose}
-      />
-
-      <div className="flex min-h-screen items-center justify-center p-4">
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0, y: 20 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.95, opacity: 0, y: 20 }}
-          transition={{ type: "spring", duration: 0.3 }}
-          className="relative w-full max-w-2xl bg-white dark:bg-gray-800 rounded-xl shadow-xl flex flex-col my-6"
-        >
-          <div className="flex justify-between items-center border-b border-gray-100 dark:border-gray-700 p-6">
-            <div>
-              <motion.h2
-                initial={{ x: -20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                className="text-xl font-semibold text-gray-900 dark:text-white"
-              >
-                Reflexión del día
-              </motion.h2>
-              <motion.p
-                initial={{ x: -20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                className="text-sm text-gray-600 dark:text-gray-400 capitalize"
-              >
-                {formattedDate}
-              </motion.p>
-            </div>
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400 transition-colors rounded-lg p-1"
-            >
-              <X className="h-6 w-6" />
-            </motion.button>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={`Reflexión del ${formattedDate}`}
+      footer={modalFooter}
+    >
+      <form id="reflectionForm" onSubmit={handleSubmit} className="p-6 space-y-6">
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Prácticas Realizadas</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {renderPracticeOption('breathing', <BookOpen className="h-6 w-6" />, 'breathingExercise')}
+            {renderPracticeOption('witness', <Brain className="h-6 w-6" />, 'witnessPresence')}
+            {renderPracticeOption('clearing', <Flower2 className="h-6 w-6" />, 'mentalClearing')}
+            {renderPracticeOption('inquiry', <AlertCircle className="h-6 w-6" />, 'selfInquiry')}
           </div>
+        </div>
 
-          <div className="flex-1 overflow-y-auto max-h-[calc(85vh-8rem)]">
-            <form id="reflectionForm" onSubmit={handleSubmit} className="p-6 space-y-6">
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Prácticas Realizadas</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {renderPracticeOption('breathing', <BookOpen className="h-6 w-6" />, 'breathingExercise')}
-                  {renderPracticeOption('witness', <Brain className="h-6 w-6" />, 'witnessPresence')}
-                  {renderPracticeOption('clearing', <Flower2 className="h-6 w-6" />, 'mentalClearing')}
-                  {renderPracticeOption('inquiry', <AlertCircle className="h-6 w-6" />, 'selfInquiry')}
-                </div>
-              </div>
+        <div>
+          <label htmlFor="event" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Evento o Situación
+          </label>
+          <textarea
+            id="event"
+            value={formData.event}
+            onChange={(e) => handleInputChange('event', e.target.value)}
+            rows={2}
+            className="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            placeholder="Describe el evento o situación que desencadenó la práctica..."
+          />
+        </div>
 
-              <div>
-                <label htmlFor="event" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Evento o Situación
-                </label>
-                <textarea
-                  id="event"
-                  value={formData.event}
-                  onChange={(e) => handleInputChange('event', e.target.value)}
-                  rows={2}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                  placeholder="Describe el evento o situación que desencadenó la práctica..."
-                />
-              </div>
+        <div>
+          <label htmlFor="emotional-response" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Respuesta Emocional
+          </label>
+          <textarea
+            id="emotional-response"
+            value={formData.emotionalResponse}
+            onChange={(e) => handleInputChange('emotionalResponse', e.target.value)}
+            rows={2}
+            className="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            placeholder="¿Qué emociones surgieron?"
+          />
+        </div>
 
-              <div>
-                <label htmlFor="emotional-response" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Respuesta Emocional
-                </label>
-                <textarea
-                  id="emotional-response"
-                  value={formData.emotionalResponse}
-                  onChange={(e) => handleInputChange('emotionalResponse', e.target.value)}
-                  rows={2}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                  placeholder="¿Qué emociones surgieron?"
-                />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+            <Brain className="h-4 w-4" />
+            Nivel de Contemplación
+          </label>
+          <div className="mt-2 grid grid-cols-2 gap-3">
+            <label className={`relative flex cursor-pointer rounded-lg border p-4 ${
+              formData.level === 'superficial'
+                ? 'border-indigo-500 ring-2 ring-indigo-500'
+                : 'border-gray-300 dark:border-gray-600'
+            }`}>
+              <input
+                type="radio"
+                name="contemplation-level"
+                value="superficial"
+                checked={formData.level === 'superficial'}
+                onChange={(e) => handleInputChange('level', e.target.value)}
+                className="sr-only"
+              />
+              <div className="flex flex-col">
+                <span className="block text-sm font-medium text-gray-900 dark:text-gray-100">
+                  Superficial
+                </span>
+                <span className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Observación inicial de patrones y reacciones
+                </span>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                  <Brain className="h-4 w-4" />
-                  Nivel de Contemplación
-                </label>
-                <div className="mt-2 grid grid-cols-2 gap-3">
-                  <label className={`relative flex cursor-pointer rounded-lg border p-4 ${
-                    formData.level === 'superficial'
-                      ? 'border-indigo-500 ring-2 ring-indigo-500'
-                      : 'border-gray-300 dark:border-gray-600'
-                  }`}>
-                    <input
-                      type="radio"
-                      name="contemplation-level"
-                      value="superficial"
-                      checked={formData.level === 'superficial'}
-                      onChange={(e) => handleInputChange('level', e.target.value)}
-                      className="sr-only"
-                    />
-                    <div className="flex flex-col">
-                      <span className="block text-sm font-medium text-gray-900 dark:text-gray-100">
-                        Superficial
-                      </span>
-                      <span className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                        Observación inicial de patrones y reacciones
-                      </span>
-                    </div>
-                  </label>
-                  <label className={`relative flex cursor-pointer rounded-lg border p-4 ${
-                    formData.level === 'deep'
-                      ? 'border-indigo-500 ring-2 ring-indigo-500'
-                      : 'border-gray-300 dark:border-gray-600'
-                  }`}>
-                    <input
-                      type="radio"
-                      name="contemplation-level"
-                      value="deep"
-                      checked={formData.level === 'deep'}
-                      onChange={(e) => handleInputChange('level', e.target.value)}
-                      className="sr-only"
-                    />
-                    <div className="flex flex-col">
-                      <span className="block text-sm font-medium text-gray-900 dark:text-gray-100">
-                        Profunda
-                      </span>
-                      <span className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                        Indagación profunda en la naturaleza del ser
-                      </span>
-                    </div>
-                  </label>
-                </div>
+            </label>
+            <label className={`relative flex cursor-pointer rounded-lg border p-4 ${
+              formData.level === 'deep'
+                ? 'border-indigo-500 ring-2 ring-indigo-500'
+                : 'border-gray-300 dark:border-gray-600'
+            }`}>
+              <input
+                type="radio"
+                name="contemplation-level"
+                value="deep"
+                checked={formData.level === 'deep'}
+                onChange={(e) => handleInputChange('level', e.target.value)}
+                className="sr-only"
+              />
+              <div className="flex flex-col">
+                <span className="block text-sm font-medium text-gray-900 dark:text-gray-100">
+                  Profunda
+                </span>
+                <span className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Indagación profunda en la naturaleza del ser
+                </span>
               </div>
-
-              <div>
-                <label htmlFor="insights" className="block text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                  <BookOpen className="h-4 w-4" />
-                  Insights y Observaciones
-                </label>
-                <textarea
-                  id="insights"
-                  value={formData.insights}
-                  onChange={(e) => handleInputChange('insights', e.target.value)}
-                  rows={3}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                  placeholder="¿Qué has descubierto durante la práctica?"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="limiting-belief" className="block text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4" />
-                  Creencia Limitante Identificada
-                </label>
-                <textarea
-                  id="limiting-belief"
-                  value={formData.limitingBelief}
-                  onChange={(e) => handleInputChange('limitingBelief', e.target.value)}
-                  rows={2}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                  placeholder="¿Qué creencia limitante has identificado?"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="new-perspective" className="block text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                  <Flower2 className="h-4 w-4" />
-                  Nueva Perspectiva
-                </label>
-                <textarea
-                  id="new-perspective"
-                  value={formData.newPerspective}
-                  onChange={(e) => handleInputChange('newPerspective', e.target.value)}
-                  rows={2}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                  placeholder="¿Qué nueva perspectiva has descubierto?"
-                />
-              </div>
-            </form>
+            </label>
           </div>
+        </div>
 
-          <div className="border-t border-gray-100 dark:border-gray-700 p-6 flex justify-end space-x-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              form="reflectionForm"
-              className="inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              Guardar
-            </button>
-          </div>
-        </motion.div>
-      </div>
-    </div>
+        <div>
+          <label htmlFor="insights" className="block text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+            <BookOpen className="h-4 w-4" />
+            Insights y Observaciones
+          </label>
+          <textarea
+            id="insights"
+            value={formData.insights}
+            onChange={(e) => handleInputChange('insights', e.target.value)}
+            rows={3}
+            className="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            placeholder="¿Qué has descubierto durante la práctica?"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="limiting-belief" className="block text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+            <AlertCircle className="h-4 w-4" />
+            Creencia Limitante Identificada
+          </label>
+          <textarea
+            id="limiting-belief"
+            value={formData.limitingBelief}
+            onChange={(e) => handleInputChange('limitingBelief', e.target.value)}
+            rows={2}
+            className="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            placeholder="¿Qué creencia limitante has identificado?"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="new-perspective" className="block text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+            <Flower2 className="h-4 w-4" />
+            Nueva Perspectiva
+          </label>
+          <textarea
+            id="new-perspective"
+            value={formData.newPerspective}
+            onChange={(e) => handleInputChange('newPerspective', e.target.value)}
+            rows={2}
+            className="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            placeholder="¿Qué nueva perspectiva has descubierto?"
+          />
+        </div>
+      </form>
+    </Modal>
   );
 });

@@ -74,7 +74,10 @@ export const PracticeCard = forwardRef<HTMLDivElement, PracticeCardProps>(({ pra
   };
 
   const getRemainingDays = () => {
-    return practice.duration - (practice.completedDates.length || 0);
+    if (!practice?.duration || !practice?.completedDates?.length) {
+      return practice?.duration || 0;
+    }
+    return practice.duration - practice.completedDates.length;
   };
 
   const dates = getDates();
@@ -124,7 +127,7 @@ export const PracticeCard = forwardRef<HTMLDivElement, PracticeCardProps>(({ pra
           <Progress.Indicator
             className="bg-white"
             style={{ 
-              transform: `translateX(-${100 - (practice.completedDates.length / practice.duration * 100)}%)` 
+              transform: `translateX(-${100 - ((practice?.completedDates?.length || 0) / (practice?.duration || 1) * 100)}%)` 
             }}
             asChild
           >
@@ -132,7 +135,7 @@ export const PracticeCard = forwardRef<HTMLDivElement, PracticeCardProps>(({ pra
               variants={progressBarVariants}
               initial="initial"
               animate="animate"
-              custom={(practice.completedDates.length / practice.duration * 100)}
+              custom={(practice?.completedDates?.length || 0) / (practice?.duration || 1) * 100}
               className="w-full h-full transition-transform duration-500 ease-out"
             />
           </Progress.Indicator>

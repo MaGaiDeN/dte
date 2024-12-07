@@ -27,7 +27,8 @@ export interface Practice {
   color: string;
   progress: number;
   completedDates: string[];
-  reflections?: {
+  duration: PracticeDuration;
+  reflections: {
     [date: string]: {
       practiceId: string;
       date: string;
@@ -61,9 +62,9 @@ export interface Practice {
   };
   currentStreak: number;
   longestStreak: number;
-  duration: PracticeDuration;
   startDate: string;
   observations?: string;
+  isCompleted?: boolean;
 }
 
 export interface PracticeStatus {

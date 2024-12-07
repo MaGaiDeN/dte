@@ -18,7 +18,8 @@ export const DEFAULT_PRACTICES: Practice[] = [
     currentStreak: 0,
     longestStreak: 0,
     duration: 30,
-    startDate: getTodayDate() // Use today's date
+    startDate: getTodayDate(), // Use today's date
+    reflections: {}  // Initialize empty reflections
   },
   {
     id: '2',
@@ -31,7 +32,8 @@ export const DEFAULT_PRACTICES: Practice[] = [
     currentStreak: 0,
     longestStreak: 0,
     duration: 30,
-    startDate: getTodayDate() // Use today's date
+    startDate: getTodayDate(), // Use today's date
+    reflections: {}  // Initialize empty reflections
   },
   {
     id: '3',
@@ -44,6 +46,7 @@ export const DEFAULT_PRACTICES: Practice[] = [
     currentStreak: 0,
     longestStreak: 0,
     duration: 30,
-    startDate: getTodayDate() // Use today's date
+    startDate: getTodayDate(), // Use today's date
+    reflections: {}  // Initialize empty reflections
   }
 ];
