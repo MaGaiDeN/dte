@@ -37,9 +37,11 @@ export const ChallengesList = () => {
     )
   ]);
 
-  const handleUpdateProgress = (id: string, progress: number) => {
-    console.log(`Updating progress for challenge with id: ${id}, new progress: ${progress}%`);
-    // Implement actual progress update logic here
+  const handleUpdateProgress = (id: string, progress: number | null) => {
+    if (progress !== null) {
+      console.log(`Updating progress for challenge with id: ${id}, new progress: ${progress}%`);
+      // Implement actual progress update logic here
+    }
   };
 
   return (
