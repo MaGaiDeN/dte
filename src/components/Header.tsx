@@ -97,8 +97,26 @@ export function Header({ onReset, onNewPractice, onShowStats, onCreateChallenge 
                 </h1>
               </div>
 
-              <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                <ChallengesMenu onCreateChallenge={handleCreateChallenge} />
+              {/* Desktop menu */}
+              <div className="hidden sm:flex items-center space-x-8">
+                <nav className="flex items-center space-x-2">
+                  {menuItems.map((item, index) => (
+                    <button 
+                      key={index}
+                      onClick={item.onClick}
+                      className={`
+                        flex items-center px-3 py-2 rounded-lg
+                        ${item.primary ? 'bg-white/10' : ''}
+                        ${item.danger ? 'hover:bg-red-500/20' : 'hover:bg-white/20'}
+                        text-indigo-100 hover:text-white transition-colors
+                        ${item.className || ''}
+                      `}
+                    >
+                      {item.icon}
+                      <span className="ml-2">{item.label}</span>
+                    </button>
+                  ))}
+                </nav>
               </div>
 
               {/* Mobile menu button */}
@@ -109,30 +127,12 @@ export function Header({ onReset, onNewPractice, onShowStats, onCreateChallenge 
                 <Menu className="h-6 w-6" />
               </button>
 
-              {/* Desktop navigation */}
-              <nav className="hidden sm:flex items-center space-x-2">
-                {menuItems.map((item, index) => (
-                  <button 
-                    key={index}
-                    onClick={item.onClick}
-                    className={`
-                      flex items-center px-3 py-2 rounded-lg
-                      ${item.primary ? 'bg-white/10' : ''}
-                      ${item.danger ? 'hover:bg-red-500/20' : 'hover:bg-white/20'}
-                      text-indigo-100 hover:text-white transition-colors
-                      ${item.className || ''}
-                    `}
-                  >
-                    {item.icon}
-                    <span className="ml-2">{item.label}</span>
-                  </button>
-                ))}
-              </nav>
             </div>
 
             {/* Mobile navigation */}
             {isMenuOpen && (
               <nav className="sm:hidden mt-4 pb-4 space-y-2">
+                <ChallengesMenu onCreateChallenge={handleCreateChallenge} />
                 {menuItems.map((item, index) => (
                   <button 
                     key={index}

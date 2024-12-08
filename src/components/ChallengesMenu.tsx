@@ -15,7 +15,7 @@ export const ChallengesMenu = ({ onCreateChallenge }: ChallengesMenuProps) => {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+        className="flex items-center w-full gap-2 px-3 py-2 text-indigo-100 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
       >
         <Medal className="w-5 h-5" />
         <span>Reto 30 días</span>
@@ -33,7 +33,7 @@ export const ChallengesMenu = ({ onCreateChallenge }: ChallengesMenuProps) => {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="absolute right-0 mt-2 w-96 bg-white dark:bg-gray-900 rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50"
+            className="absolute right-0 mt-2 w-full sm:w-96 bg-white dark:bg-gray-900 rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50"
           >
             <div className="p-4 space-y-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">

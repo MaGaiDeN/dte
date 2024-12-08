@@ -1,5 +1,6 @@
 import { Check, Circle } from 'lucide-react';
 import type { Practice } from '../types/Habit';
+import { getDayName, groupDatesByMonth, isFutureDate, getLastNDays } from '../utils/dateUtils';
 
 interface PracticeGridProps {
   practices: Practice[];
@@ -7,22 +8,10 @@ interface PracticeGridProps {
 }
 
 export function PracticeGrid({ practices, onDateClick }: PracticeGridProps) {
-  const dates = Array.from({ length: 60 }, (_, i) => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    d.setDate(d.getDate() - i);
-    return d.toISOString().split('T')[0];
-  }).reverse();
-
+  const dates = getLastNDays(60);
+  
   // Group dates by month for better organization
-  const datesByMonth = dates.reduce((acc, date) => {
-    const monthYear = new Date(date).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
-    if (!acc[monthYear]) {
-      acc[monthYear] = [];
-    }
-    acc[monthYear].push(date);
-    return acc;
-  }, {} as Record<string, string[]>);
+  const datesByMonth = groupDatesByMonth(dates);
 
   return (
     <div className="space-y-8">
@@ -60,7 +49,16 @@ export function PracticeGrid({ practices, onDateClick }: PracticeGridProps) {
                     const day = dayDate.getDate();
                     const dayOfWeek = dayDate.getDay();
                     const isCompleted = practice.completedDates.includes(date);
-                    const isFuture = new Date(date) > new Date();
+                    const isFuture = isFutureDate(date);
+                    
+                    // Si no hay fechas completadas o esta es la primera fecha disponible
+                    const hasNoPreviousEntries = practice.completedDates.length === 0;
+                    const isNextAvailableDay = hasNoPreviousEntries || 
+                      (practice.completedDates.length > 0 && 
+                       new Date(date) > new Date(Math.max(...practice.completedDates.map(d => new Date(d).getTime()))));
+                    
+                    // Habilitar el primer día si no hay entradas previas, o seguir la lógica normal para otros días
+                    const shouldBeEnabled = hasNoPreviousEntries ? !isFuture || date === monthDates[0] : !isFuture && isNextAvailableDay;
                     
                     // Add empty cells for proper day alignment
                     const firstDayOfMonth = new Date(monthDates[0]).getDay();
@@ -73,16 +71,17 @@ export function PracticeGrid({ practices, onDateClick }: PracticeGridProps) {
                         ))}
                         <button
                           key={date}
-                          onClick={() => !isFuture && onDateClick(date, practice.id)}
-                          disabled={isFuture}
+                          onClick={() => onDateClick(date, practice.id)}
+                          disabled={!shouldBeEnabled || !isNextAvailableDay}
                           className={`
                             relative aspect-square rounded-lg flex flex-col items-center justify-center
                             transition-all duration-200 group
                             ${isCompleted 
                               ? 'bg-gradient-to-br from-purple-500 to-indigo-500 text-white shadow-sm' 
-                              : 'bg-gray-50 text-gray-400 hover:bg-gray-100'
+                              : 'bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
                             }
-                            ${isFuture ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
+                            ${!shouldBeEnabled || !isNextAvailableDay ? 'opacity-50 cursor-not-allowed' : ''}
+                            ${isNextAvailableDay ? 'border-2 border-blue-500' : ''}
                           `}
                         >
                           <span className="text-xs font-medium mb-1">
@@ -96,12 +95,7 @@ export function PracticeGrid({ practices, onDateClick }: PracticeGridProps) {
                           
                           {/* Tooltip */}
                           <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                            {new Date(date).toLocaleDateString('es-ES', {
-                              weekday: 'long',
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric'
-                            })}
+                            {getDayName(date)}
                           </div>
                         </button>
                       </>

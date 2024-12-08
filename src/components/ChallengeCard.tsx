@@ -3,6 +3,10 @@ import { motion } from 'framer-motion';
 import { Calendar, CheckCircle } from 'lucide-react';
 import type { Challenge, ChallengeDay } from '../types/Challenge';
 import { ReflectionModal } from './ReflectionModal';
+import { MeditationChallengeForm } from './MeditationChallengeForm';
+import { ContemplationChallengeForm } from './ContemplationChallengeForm';
+import chroma from 'chroma-js';
+import { formatDate, isFutureDate } from '../utils/dateUtils';
 
 interface ChallengeCardProps {
   challenge: Challenge;
@@ -10,72 +14,149 @@ interface ChallengeCardProps {
 }
 
 export const ChallengeCard = ({ challenge, onUpdateProgress }: ChallengeCardProps) => {
+  console.log('ChallengeCard renderizado:', {
+    challenge,
+    startDate: challenge.startDate,
+    currentTime: new Date().toISOString(),
+    horaLocal: new Date().getHours()
+  });
+
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
-  const [days, setDays] = useState<ChallengeDay[]>(
-    Array.from({ length: 30 }, (_, i) => ({
-      day: i + 1,
-      isCompleted: false
-    }))
-  );
+  const [days, setDays] = useState<ChallengeDay[]>(() => {
+    const today = new Date();
+    const todayStr = formatDate(today);
+    
+    // Initialize days based on some logic without referencing 'days'
+    const initialDays: ChallengeDay[] = Array.from({ length: 30 }, (_, i) => {
+      const currentDate = new Date(today);
+      currentDate.setDate(today.getDate() + i);
+      const dateStr = formatDate(currentDate);
+      const dayNumber = i + 1;
+      
+      return {
+        day: dayNumber,
+        isCompleted: false,
+        isClickable: true,
+        date: dateStr
+      };
+    });
+
+    console.log('=== Inicialización de días ===');
+    console.log('Fecha actual:', {
+      fecha: todayStr,
+      objetoFecha: today.toISOString(),
+    });
+    return initialDays;
+  });
 
   const handleDayClick = (day: number) => {
-    setSelectedDay(day);
+    const selectedDayData = days.find(d => d.day === day);
+    console.log('Click en día:', {
+      numeroDia: day,
+      diaEncontrado: selectedDayData,
+      esClickeable: selectedDayData?.isClickable,
+      fecha: selectedDayData?.date,
+      todosLosDias: days.map(d => ({
+        dia: d.day,
+        clickeable: d.isClickable,
+        fecha: d.date
+      })),
+      horaLocal: new Date().getHours()
+    });
+    
+    if (selectedDayData && selectedDayData.isClickable) {
+      setSelectedDay(day);
+    }
   };
 
   const handleSaveReflection = (reflection: any) => {
-    const updatedDays = [...days];
-    const dayIndex = days.findIndex(d => d.day === selectedDay);
-    if (dayIndex !== -1) {
-      updatedDays[dayIndex] = {
-        ...updatedDays[dayIndex],
+    if (selectedDay !== null) {
+      const newDays = [...days];
+      const dayIndex = selectedDay - 1;
+      newDays[dayIndex] = {
+        ...newDays[dayIndex],
         isCompleted: true,
-        reflection,
-        date: new Date().toISOString()
+        reflection
       };
-      setDays(updatedDays);
-      
-      const progress = (updatedDays.filter(d => d.isCompleted).length / 30) * 100;
+      setDays(newDays);
+
+      const completedDays = newDays.filter(day => day.isCompleted).length;
+      const progress = (completedDays / 30) * 100;
       onUpdateProgress(progress);
     }
     setSelectedDay(null);
+  };
+
+  const getChallengeForm = () => {
+    if (!selectedDay) return null;
+
+    switch (challenge.type) {
+      case 'meditation':
+        return (
+          <MeditationChallengeForm
+            onSaveReflection={handleSaveReflection}
+            dayNumber={selectedDay}
+            onClose={() => setSelectedDay(null)}
+          />
+        );
+      case 'contemplation':
+        return (
+          <ContemplationChallengeForm
+            onSaveReflection={handleSaveReflection}
+            dayNumber={selectedDay}
+            onClose={() => setSelectedDay(null)}
+          />
+        );
+      default:
+        return null;
+    }
   };
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden w-full"
+      className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
     >
-      <div className="p-4 sm:p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">{challenge.title}</h3>
+      <div className="p-6">
+        <div className="flex items-start justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              {challenge.title}
+            </h3>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              {challenge.description}
+            </p>
+          </div>
           <div className="flex items-center space-x-2">
-            <Calendar className="w-5 h-5 text-gray-500" />
-            <span className="text-sm text-gray-500">{challenge.days} días</span>
+            <Calendar className="h-5 w-5 text-gray-400" />
+            <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+              {days.filter(day => day.isCompleted).length} / {challenge.days} días
+            </span>
           </div>
         </div>
-        
-        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-4">{challenge.description}</p>
-        
-        <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-5 lg:grid-cols-6 gap-2">
+
+        <div className="mt-6 grid grid-cols-6 gap-2">
           {days.map((day) => (
             <button
               key={day.day}
               onClick={() => handleDayClick(day.day)}
+              disabled={!day.isClickable}
               className={`
-                p-2 rounded-lg text-sm sm:text-base
+                relative p-2 rounded-lg text-sm font-medium
+                transition-all duration-200
                 ${day.isCompleted
-                  ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300'
+                  : day.isClickable
+                    ? 'bg-gray-50 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    : 'bg-gray-50 dark:bg-gray-700 text-gray-300 dark:text-gray-500 opacity-50'
                 }
-                flex items-center justify-center
-                transition-colors duration-200
+                ${!day.isClickable ? 'cursor-not-allowed' : 'cursor-pointer'}
               `}
             >
-              {day.isCompleted ? (
-                <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
-              ) : (
-                day.day
+              {day.day}
+              {day.isCompleted && (
+                <CheckCircle className="absolute -top-1 -right-1 h-4 w-4 text-green-500" />
               )}
             </button>
           ))}
@@ -85,12 +166,34 @@ export const ChallengeCard = ({ challenge, onUpdateProgress }: ChallengeCardProp
       {selectedDay && (
         <ReflectionModal
           isOpen={selectedDay !== null}
-          onClose={() => setSelectedDay(null)}
+          onClose={() => {
+            console.log('Modal closing');
+            setSelectedDay(null);
+          }}
+          title={`Día ${selectedDay} - ${challenge.title}`}
           date={new Date().toISOString()}
           practiceId={challenge.id}
-          practice={challenge as any}
-          onSave={handleSaveReflection}
-        />
+          practice={{
+            id: challenge.id,
+            type: challenge.type,
+            name: challenge.name,
+            description: challenge.description,
+            color: chroma.random().hex(),
+            progress: 0,
+            completedDates: [],
+            duration: 30,
+            currentStreak: 0,
+            longestStreak: 0,
+            reflections: {},
+            startDate: new Date().toISOString().split('T')[0],
+          }}
+          onSave={(reflection) => {
+            console.log('Saving reflection:', reflection);
+            handleSaveReflection(reflection);
+          }}
+        >
+          {getChallengeForm()}
+        </ReflectionModal>
       )}
     </motion.div>
   );

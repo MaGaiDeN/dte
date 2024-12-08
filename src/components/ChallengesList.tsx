@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Challenge } from '../types/Challenge';
 import { ChallengeCard } from './ChallengeCard';
 import { dailyMeditations } from '../data/dailyMeditations';
+import { dailyContemplations } from '../data/dailyContemplations';
 
 // Define the interface for DailyMeditation
 interface DailyMeditation {
@@ -15,18 +16,25 @@ interface DailyMeditation {
 }
 
 // Mapping function to convert DailyMeditation to Challenge
-const mapDailyMeditationToChallenge = (meditation: DailyMeditation): Challenge => ({
-  id: meditation.id ?? 'default-id',
+const mapDailyMeditationToChallenge = (meditation: DailyMeditation, type: "meditation" | "contemplation"): Challenge => ({
+  id: meditation.id ?? `${type}-challenge`,
   title: meditation.title ?? 'Default Title',
   description: meditation.description ?? 'Default Description',
-  type: meditation.type ?? 'meditation',
-  days: meditation.days ?? 30,
-  progress: meditation.progress ?? 0,
-  isActive: meditation.isActive ?? true,
+  type: type,
+  days: 30,
+  progress: 0,
+  isActive: true
 });
 
 export const ChallengesList = () => {
-  const [challenges] = useState<Challenge[]>(Object.values(dailyMeditations).map((meditation) => mapDailyMeditationToChallenge(meditation)));
+  const [challenges] = useState<Challenge[]>([
+    ...Object.values(dailyMeditations).map(meditation => 
+      mapDailyMeditationToChallenge(meditation, "meditation")
+    ),
+    ...Object.values(dailyContemplations).map(contemplation => 
+      mapDailyMeditationToChallenge(contemplation, "contemplation")
+    )
+  ]);
 
   const handleUpdateProgress = (id: string, progress: number) => {
     console.log(`Updating progress for challenge with id: ${id}, new progress: ${progress}%`);
