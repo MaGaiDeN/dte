@@ -28,6 +28,7 @@ export interface Practice {
   progress: number;
   completedDates: string[];
   duration: PracticeDuration;
+  lastReflectionDate?: string;
   reflections: {
     [date: string]: {
       practiceId: string;
@@ -63,6 +64,9 @@ export interface Practice {
   currentStreak: number;
   longestStreak: number;
   startDate: string;
+  endDate?: string | null;
+  frequency?: HabitFrequency | null;
+  status?: 'active' | 'completed' | 'paused' | null;
   observations?: string;
   isCompleted?: boolean;
 }

@@ -6,11 +6,11 @@ import { ReflectionModal } from './ReflectionModal';
 import { MeditationChallengeForm } from './MeditationChallengeForm';
 import { ContemplationChallengeForm } from './ContemplationChallengeForm';
 import chroma from 'chroma-js';
-import { formatDate, isFutureDate } from '../utils/dateUtils';
+import { formatDate } from '../utils/dateUtils';
 
 interface ChallengeCardProps {
   challenge: Challenge;
-  onUpdateProgress: (progress: number) => void;
+  onUpdateProgress: (progress: number | null) => void;
 }
 
 export const ChallengeCard = ({ challenge, onUpdateProgress }: ChallengeCardProps) => {
@@ -82,7 +82,7 @@ export const ChallengeCard = ({ challenge, onUpdateProgress }: ChallengeCardProp
 
       const completedDays = newDays.filter(day => day.isCompleted).length;
       const progress = (completedDays / 30) * 100;
-      onUpdateProgress(progress);
+      onUpdateProgress(progress !== null ? progress : 0);
     }
     setSelectedDay(null);
   };
@@ -179,13 +179,19 @@ export const ChallengeCard = ({ challenge, onUpdateProgress }: ChallengeCardProp
             name: challenge.name,
             description: challenge.description,
             color: chroma.random().hex(),
+            startDate: new Date().toISOString(),
+            endDate: null,
+            frequency: null,
             progress: 0,
+            status: 'active',
             completedDates: [],
             duration: 30,
-            currentStreak: 0,
-            longestStreak: 0,
             reflections: {},
-            startDate: new Date().toISOString().split('T')[0],
+            currentStreak: 0,
+            longestStreak: 0
+          }}
+          updatePractice={(updatedPractice) => {
+            console.log('Updating practice:', updatedPractice);
           }}
           onSave={(reflection) => {
             console.log('Saving reflection:', reflection);

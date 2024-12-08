@@ -12,6 +12,7 @@ interface ReflectionModalProps {
   practice: Practice;
   title?: string;
   onSave: (reflection: ReflectionFormData) => void;
+  updatePractice?: (practice: Practice) => void;
   children?: React.ReactNode;
 }
 
@@ -46,7 +47,7 @@ interface ReflectionFormData {
   isEmpty: boolean;
 }
 
-function ReflectionModalComponent({ isOpen, onClose, date, practiceId, practice, onSave, children, title }: ReflectionModalProps) {
+function ReflectionModalComponent({ isOpen, onClose, date, practiceId, practice, onSave, children, title, updatePractice }: ReflectionModalProps) {
   // Combinar estados relacionados en un solo objeto
   const [formData, setFormData] = useState<ReflectionFormData>({
     practiceId,
@@ -311,6 +312,13 @@ function ReflectionModalComponent({ isOpen, onClose, date, practiceId, practice,
 
     // Call onSave with the reflection data
     onSave(reflection);
+    // If updatePractice is provided, update the practice after saving
+    if (updatePractice) {
+      const updatedPractice: Practice = {
+        ...practice,
+      };
+      updatePractice(updatedPractice);
+    }
     onClose();
   };
 

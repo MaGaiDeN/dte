@@ -19,6 +19,7 @@ interface DailyMeditation {
 const mapDailyMeditationToChallenge = (meditation: DailyMeditation, type: "meditation" | "contemplation"): Challenge => ({
   id: meditation.id ?? `${type}-challenge`,
   title: meditation.title ?? 'Default Title',
+  name: meditation.title ?? 'Default Title',
   description: meditation.description ?? 'Default Description',
   type: type,
   days: 30,

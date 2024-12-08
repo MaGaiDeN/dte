@@ -200,7 +200,7 @@ function App() {
                 date={selectedDate}
                 practiceId={selectedPracticeId}
                 practice={practices.find(p => p.id === selectedPracticeId) as Practice}
-                updatePractice={(updatedPractice) => dispatch(updatePractice(updatedPractice))}
+                updatePractice={(updatedPractice: Practice) => dispatch(updatePractice(updatedPractice))}
                 onSave={handleSaveReflection}
               />
             )}
