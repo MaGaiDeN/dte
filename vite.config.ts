@@ -10,7 +10,7 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       output: {
-        // Trigger workflow update
+        // Force new build with timestamp: 2024-12-08T09:27:20+01:00
         entryFileNames: `assets/[name].[hash].js`,
         chunkFileNames: `assets/[name].[hash].js`,
         assetFileNames: `assets/[name].[hash].[ext]`
@@ -21,7 +21,5 @@ export default defineConfig({
     fs: {
       strict: true
     }
-  },
-  // Add a comment to trigger the workflow
-  // Last updated: 2024-02-13
+  }
 });
