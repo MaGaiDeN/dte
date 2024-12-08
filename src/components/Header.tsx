@@ -53,19 +53,13 @@ export function Header({ onReset, onNewPractice, onShowStats, onCreateChallenge 
       className: '' // Optional className
     },
     {
-      icon: theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />, 
-      label: theme === 'dark' ? 'Modo Claro' : 'Modo Oscuro',
-      onClick: toggleTheme,
-      className: '' // Optional className
-    },
-    {
-      icon: <Settings className="h-5 w-5" />, 
+      icon: <Settings className="h-5 w-5" />,
       label: 'Configuración',
       onClick: () => setIsConfigOpen(true),
       className: '' // Optional className
     },
     {
-      icon: <RotateCcw className="h-5 w-5" />, 
+      icon: <RotateCcw className="h-5 w-5" />,
       label: 'Reiniciar',
       onClick: handleReset,
       danger: true,
@@ -74,94 +68,110 @@ export function Header({ onReset, onNewPractice, onShowStats, onCreateChallenge 
   ];
 
   return (
-    <header className="relative">
-      <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-900 dark:via-purple-900 dark:to-pink-900">
-        <div className="absolute inset-0 opacity-10"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='1' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='1'/%3E%3Ccircle cx='13' cy='13' r='1'/%3E%3C/g%3E%3C/svg%3E")`,
-          }}
-        />
-      </div>
+    <header className="bg-indigo-600 shadow-lg">
+      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Top">
+        <div className="w-full py-4 flex items-center justify-between border-b border-indigo-500 lg:border-none">
+          <div className="flex items-center">
+            <Sparkles className="h-8 w-8 text-white" />
+            <h1 className="ml-3 text-xl sm:text-2xl font-bold text-white">
+              DTE
+              <span className="block text-xs sm:text-sm font-medium text-indigo-100 opacity-90">
+                Disolución del Ego
+              </span>
+            </h1>
+          </div>
 
-      <div className="relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="py-4 sm:py-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <Sparkles className="h-8 w-8 text-white" />
-                <h1 className="ml-3 text-xl sm:text-2xl font-bold text-white">
-                  DTE
-                  <span className="block text-xs sm:text-sm font-medium text-indigo-100 opacity-90">
-                    Disolución del Ego
-                  </span>
-                </h1>
-              </div>
-
-              {/* Desktop menu */}
-              <div className="hidden sm:flex items-center space-x-8">
-                <nav className="flex items-center space-x-2">
-                  {menuItems.map((item, index) => (
-                    <button 
-                      key={index}
-                      onClick={item.onClick}
-                      className={`
-                        flex items-center px-3 py-2 rounded-lg
-                        ${item.primary ? 'bg-white/10' : ''}
-                        ${item.danger ? 'hover:bg-red-500/20' : 'hover:bg-white/20'}
-                        text-indigo-100 hover:text-white transition-colors
-                        ${item.className || ''}
-                      `}
-                    >
-                      {item.icon}
-                      <span className="ml-2">{item.label}</span>
-                    </button>
-                  ))}
-                </nav>
-              </div>
-
-              {/* Mobile menu button */}
-              <button 
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="sm:hidden p-2 rounded-lg text-indigo-100 hover:bg-white/10 transition-colors"
+          {/* Desktop Navigation */}
+          <div className="hidden lg:flex lg:items-center lg:space-x-6">
+            <ChallengesMenu onCreateChallenge={handleCreateChallenge} />
+            {menuItems.map((item, index) => (
+              <button
+                key={index}
+                onClick={item.onClick}
+                className={`
+                  inline-flex items-center px-4 py-2 text-sm font-medium rounded-md
+                  ${item.danger 
+                    ? 'text-red-100 hover:text-white hover:bg-red-500' 
+                    : item.primary
+                      ? 'text-indigo-100 hover:text-white hover:bg-white/20'
+                      : 'text-indigo-100 hover:text-white hover:bg-white/20'
+                  }
+                  transition-colors
+                  ${item.className || ''}
+                `}
               >
-                <Menu className="h-6 w-6" />
+                {item.icon}
+                <span className="ml-2">{item.label}</span>
               </button>
+            ))}
+            <button
+              onClick={toggleTheme}
+              className="p-2 text-indigo-100 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
+            >
+              {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </button>
+          </div>
 
-            </div>
-
-            {/* Mobile navigation */}
-            {isMenuOpen && (
-              <nav className="sm:hidden mt-4 pb-4 space-y-2">
-                <ChallengesMenu onCreateChallenge={handleCreateChallenge} />
-                {menuItems.map((item, index) => (
-                  <button 
-                    key={index}
-                    onClick={() => {
-                      item.onClick();
-                      setIsMenuOpen(false);
-                    }}
-                    className={`
-                      flex items-center w-full px-3 py-2 rounded-lg
-                      ${item.primary ? 'bg-white/10' : ''}
-                      ${item.danger ? 'hover:bg-red-500/20' : 'hover:bg-white/20'}
-                      text-indigo-100 hover:text-white transition-colors
-                      ${item.className || ''}
-                    `}
-                  >
-                    {item.icon}
-                    <span className="ml-2">{item.label}</span>
-                  </button>
-                ))}
-              </nav>
-            )}
+          {/* Mobile menu button */}
+          <div className="lg:hidden">
+            <button
+              type="button"
+              className="p-2 text-indigo-100 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              <Menu className="h-6 w-6" />
+            </button>
           </div>
         </div>
-      </div>
 
-      <ConfigurationModal 
-        isOpen={isConfigOpen}
-        onClose={() => setIsConfigOpen(false)}
-      />
+        {/* Mobile Navigation */}
+        {isMenuOpen && (
+          <div className="lg:hidden py-4">
+            <div className="flex flex-col space-y-2">
+              <ChallengesMenu onCreateChallenge={handleCreateChallenge} />
+              {menuItems.map((item, index) => (
+                <button
+                  key={index}
+                  onClick={() => {
+                    item.onClick();
+                    setIsMenuOpen(false);
+                  }}
+                  className={`
+                    flex items-center px-3 py-2 rounded-lg text-sm
+                    ${item.danger 
+                      ? 'text-red-100 hover:text-white hover:bg-red-500' 
+                      : 'text-indigo-100 hover:text-white hover:bg-white/20'
+                    }
+                    transition-colors
+                    ${item.className || ''}
+                  `}
+                >
+                  {item.icon}
+                  <span className="ml-2">{item.label}</span>
+                </button>
+              ))}
+              <button
+                onClick={() => {
+                  toggleTheme();
+                  setIsMenuOpen(false);
+                }}
+                className="flex items-center px-3 py-2 text-indigo-100 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
+              >
+                {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                <span className="ml-2">Cambiar tema</span>
+              </button>
+            </div>
+          </div>
+        )}
+      </nav>
+
+      {/* Configuration Modal */}
+      {isConfigOpen && (
+        <ConfigurationModal
+          isOpen={isConfigOpen}
+          onClose={() => setIsConfigOpen(false)}
+        />
+      )}
     </header>
   );
 }
