@@ -6,7 +6,6 @@ import { ReflectionModal } from './components/ReflectionModal';
 import { StatsModal } from './components/StatsModal';
 import { PracticeCard } from './components/PracticeCard';
 import { Header } from './components/Header';
-import { ChallengesList } from './components/ChallengesList';
 import { useAppSelector, useAppDispatch } from './store/hooks';
 import { resetPractices, deletePractice, addPractice, updatePractice } from './store/practicesSlice';
 import { staggerChildren } from './constants/animations';
@@ -128,47 +127,36 @@ function App() {
           />
           
           <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-            {/* Challenges Section */}
-            <section className="mb-8">
-              <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-200">Retos</h2>
-              <ChallengesList />
-            </section>
-
-            {/* Practices Grid */}
-            <section>
-              <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-200">Prácticas</h2>
-              <motion.div 
-                variants={staggerChildren}
-                initial="initial"
-                animate="animate"
-                className="grid grid-cols-1 gap-4 sm:gap-6"
-              >
-                <AnimatePresence mode="popLayout">
-                  {practices.map((practice) => (
-                    <PracticeCard
-                      key={practice.id}
-                      practice={practice}
-                      onDelete={(id) => {
-                        dispatch(deletePractice(id));
-                      }}
-                      onClick={(practiceId, date) => {
-                        const practice = practices.find(p => p.id === practiceId);
-                        if (practice?.type === 'meditation' && practice.duration === 30) {
-                          setSelectedPracticeId(practiceId);
-                          setSelectedDate(date);
-                          setIsMeditationChallengeOpen(true);
-                        } else {
-                          setSelectedPracticeId(practiceId);
-                          setSelectedDate(date);
-                          setIsReflectionModalOpen(true);
-                        }
-                      }}
-                      onEdit={handleEditPractice}
-                    />
-                  ))}
-                </AnimatePresence>
-              </motion.div>
-            </section>
+            <motion.div 
+              variants={staggerChildren}
+              initial="initial"
+              animate="animate"
+              className="grid grid-cols-1 gap-4 sm:gap-6">
+              <AnimatePresence mode="popLayout">
+                {practices.map((practice) => (
+                  <PracticeCard
+                    key={practice.id}
+                    practice={practice}
+                    onDelete={(id) => {
+                      dispatch(deletePractice(id));
+                    }}
+                    onClick={(practiceId, date) => {
+                      const practice = practices.find(p => p.id === practiceId);
+                      if (practice?.type === 'meditation' && practice.duration === 30) {
+                        setSelectedPracticeId(practiceId);
+                        setSelectedDate(date);
+                        setIsMeditationChallengeOpen(true);
+                      } else {
+                        setSelectedPracticeId(practiceId);
+                        setSelectedDate(date);
+                        setIsReflectionModalOpen(true);
+                      }
+                    }}
+                    onEdit={handleEditPractice}
+                  />
+                ))}
+              </AnimatePresence>
+            </motion.div>
           </main>
 
           <AnimatePresence>
