@@ -12,6 +12,16 @@ interface HeaderProps {
   onCreateChallenge?: (type: Challenge['type']) => void;
 }
 
+// Define a type for Menu Items
+interface MenuItem {
+  icon: JSX.Element;
+  label: string;
+  onClick: () => void;
+  primary?: boolean;
+  danger?: boolean;
+  className?: string;
+}
+
 export function Header({ onReset, onNewPractice, onShowStats, onCreateChallenge }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -27,34 +37,39 @@ export function Header({ onReset, onNewPractice, onShowStats, onCreateChallenge 
     onCreateChallenge?.(type);
   };
 
-  const menuItems = [
+  const menuItems: MenuItem[] = [
     {
-      icon: <ChartBarIcon className="h-5 w-5" />,
+      icon: <ChartBarIcon className="h-5 w-5" />, 
       label: 'Estadísticas',
       onClick: onShowStats,
-      primary: true
+      primary: true,
+      className: '' // Optional className
     },
     {
       icon: <Plus className="h-5 w-5" />,
       label: 'Nueva Práctica',
       onClick: onNewPractice,
-      primary: true
+      primary: true,
+      className: '' // Optional className
     },
     {
-      icon: theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />,
+      icon: theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />, 
       label: theme === 'dark' ? 'Modo Claro' : 'Modo Oscuro',
-      onClick: toggleTheme
+      onClick: toggleTheme,
+      className: '' // Optional className
     },
     {
-      icon: <Settings className="h-5 w-5" />,
+      icon: <Settings className="h-5 w-5" />, 
       label: 'Configuración',
-      onClick: () => setIsConfigOpen(true)
+      onClick: () => setIsConfigOpen(true),
+      className: '' // Optional className
     },
     {
-      icon: <RotateCcw className="h-5 w-5" />,
+      icon: <RotateCcw className="h-5 w-5" />, 
       label: 'Reiniciar',
       onClick: handleReset,
-      danger: true
+      danger: true,
+      className: '' // Optional className
     }
   ];
 
@@ -105,6 +120,7 @@ export function Header({ onReset, onNewPractice, onShowStats, onCreateChallenge 
                       ${item.primary ? 'bg-white/10' : ''}
                       ${item.danger ? 'hover:bg-red-500/20' : 'hover:bg-white/20'}
                       text-indigo-100 hover:text-white transition-colors
+                      ${item.className || ''}
                     `}
                   >
                     {item.icon}
@@ -129,6 +145,7 @@ export function Header({ onReset, onNewPractice, onShowStats, onCreateChallenge 
                       ${item.primary ? 'bg-white/10' : ''}
                       ${item.danger ? 'hover:bg-red-500/20' : 'hover:bg-white/20'}
                       text-indigo-100 hover:text-white transition-colors
+                      ${item.className || ''}
                     `}
                   >
                     {item.icon}

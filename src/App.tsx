@@ -6,7 +6,6 @@ import { ReflectionModal } from './components/ReflectionModal';
 import { StatsModal } from './components/StatsModal';
 import { PracticeCard } from './components/PracticeCard';
 import { Header } from './components/Header';
-import { NotificationSettings } from './components/NotificationSettings';
 import { useAppSelector, useAppDispatch } from './store/hooks';
 import { resetPractices, deletePractice, addPractice, updatePractice } from './store/practicesSlice';
 import { staggerChildren } from './constants/animations';
@@ -128,13 +127,6 @@ function App() {
           />
           
           <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-6">
-              <NotificationSettings />
-            </motion.div>
-
             <motion.div 
               variants={staggerChildren}
               initial="initial"

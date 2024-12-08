@@ -41,72 +41,57 @@ export const ChallengeCard = ({ challenge, onUpdateProgress }: ChallengeCardProp
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            {challenge.title}
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            {challenge.description}
-          </p>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden w-full"
+    >
+      <div className="p-4 sm:p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">{challenge.title}</h3>
+          <div className="flex items-center space-x-2">
+            <Calendar className="w-5 h-5 text-gray-500" />
+            <span className="text-sm text-gray-500">{challenge.days} días</span>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Calendar className="w-5 h-5 text-gray-400" />
-          <span className="text-sm text-gray-600 dark:text-gray-400">
-            {challenge.startDate ? new Date(challenge.startDate).toLocaleDateString() : 'No iniciado'}
-          </span>
+        
+        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-4">{challenge.description}</p>
+        
+        <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-5 lg:grid-cols-6 gap-2">
+          {days.map((day) => (
+            <button
+              key={day.day}
+              onClick={() => handleDayClick(day.day)}
+              className={`
+                p-2 rounded-lg text-sm sm:text-base
+                ${day.isCompleted
+                  ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }
+                flex items-center justify-center
+                transition-colors duration-200
+              `}
+            >
+              {day.isCompleted ? (
+                <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+              ) : (
+                day.day
+              )}
+            </button>
+          ))}
         </div>
       </div>
 
-      <div className="grid grid-cols-6 gap-3">
-        {days.map((day) => (
-          <motion.button
-            key={day.day}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => handleDayClick(day.day)}
-            className={`aspect-square rounded-lg flex items-center justify-center relative ${
-              day.isCompleted
-                ? 'bg-green-100 dark:bg-green-900'
-                : 'bg-gray-100 dark:bg-gray-700'
-            }`}
-          >
-            <span className="text-lg font-medium text-gray-900 dark:text-white">
-              {day.day}
-            </span>
-            {day.isCompleted && (
-              <CheckCircle className="w-4 h-4 text-green-500 absolute top-1 right-1" />
-            )}
-          </motion.button>
-        ))}
-      </div>
-
-      {selectedDay !== null && (
+      {selectedDay && (
         <ReflectionModal
-          isOpen={true}
+          isOpen={selectedDay !== null}
           onClose={() => setSelectedDay(null)}
           date={new Date().toISOString()}
           practiceId={challenge.id}
-          practice={{
-            id: challenge.id,
-            type: challenge.type,
-            name: `Día ${selectedDay}`,
-            description: '',
-            isCompleted: false,
-            color: 'blue',
-            progress: 0,
-            completedDates: [],
-            reflections: {},
-            currentStreak: 0,
-            longestStreak: 0,
-            duration: 30,
-            startDate: new Date().toISOString(),
-          }}
-          updatePractice={() => {}}
+          practice={challenge as any}
           onSave={handleSaveReflection}
         />
       )}
-    </div>
+    </motion.div>
   );
 };
