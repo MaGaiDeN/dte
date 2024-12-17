@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { resolve } from 'path';
 
 export default defineConfig({
   plugins: [react()],
@@ -7,15 +8,24 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: true,
     rollupOptions: {
-      external: ['crypto'],
-      output: {
-        globals: {
-          crypto: 'crypto'
-        }
+      input: {
+        main: resolve(__dirname, 'index.html')
       }
+    }
+  },
+  resolve: {
+    alias: {
+      crypto: 'crypto-browserify',
+      stream: 'stream-browserify',
+      assert: 'assert',
+      http: 'stream-http',
+      https: 'https-browserify',
+      os: 'os-browserify',
+      url: 'url'
     }
   },
   define: {
     global: 'globalThis',
+    'process.env': process.env
   }
 }); 

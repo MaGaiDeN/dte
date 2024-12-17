@@ -1,11 +1,11 @@
 [build]
-  base = "packages/api"
-  command = "pnpm install && pnpm build"
-  publish = "dist"
+  command = "pnpm install && pnpm turbo build"
+  publish = "packages/api/dist"
 
 [build.environment]
   NODE_VERSION = "18"
   NPM_FLAGS = "--version"
+  PNPM_FLAGS = "--no-frozen-lockfile"
 
 [[redirects]]
   from = "/*"
