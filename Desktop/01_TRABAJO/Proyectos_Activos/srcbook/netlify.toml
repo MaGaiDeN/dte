@@ -1,5 +1,6 @@
 [build]
-  command = "corepack enable && pnpm install && turbo build"
+  base = "packages/api"
+  command = "pnpm install && pnpm build"
   publish = "dist"
 
 [build.environment]
